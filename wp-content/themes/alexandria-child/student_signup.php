@@ -10,6 +10,7 @@
  * @package alexandria
  */
 ?>
+<html>
 <head>
 	<link rel="stylesheet" type="text/css" href="js/fullcalendar.min.css" />
 	<script type="text/javascript" src="/js/lib/jquery.min.js"></script>
@@ -43,8 +44,4 @@
 	<div id='calendar'></div>
 </body>
 
-<?php
-
-	get_footer(); 
-
-?>
+</html>
