@@ -1,30 +1,26 @@
 <?php
-/*
- * Template Name: Student Signup
- * Description: Page template for the student signup page.
+/**
+ * The template for displaying all pages.
  *
+ * This is the template that displays all pages by default.
+ * Please note that this is the WordPress construct of pages
+ * and that other 'pages' on your WordPress site will use a
+ * different template.
+ *
+ * @package alexandria
  */
-get_header(); ?>
+?>
+<head>
+	<link rel="stylesheet" type="text/css" href="js/fullcalendar.min.css" />
+	<script type="text/javascript" src="/js/lib/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/lib/jquery-ui.custom.min.js"></script>
+	<script type="text/javascript" src="/js/lib/moment.min.js"></script>
+	<script type="text/javascript" src="/js/fullcalendar.min.js"></script>
+	<script type="text/javascript" src="/js/gcal.js"></script>
+	
+</head>
+<?php
 
-    <div id="primary" class="full-page-content-area">
-        <div id="content" class="site-content" role="main">
-
-            <?php while ( have_posts() ) : the_post(); ?>
-
-                <?php get_template_part( 'content', 'page' ); ?>
-
-                <?php
-                    // If comments are open or we have at least one comment
-, load up the comment template
-                    if ( comments_open() || '0' != get_comments_number() )
-                        comments_template();
-                ?>
-
-            <?php endwhile; // end of the loop. ?>
-
-        </div><!-- #content -->
-    </div><!-- #primary -->
-
-<?php get_footer(); ?>
+	get_footer(); 
 
 ?>
