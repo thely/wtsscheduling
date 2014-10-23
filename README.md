@@ -1,21 +1,3 @@
-# General information
-
-###File locations
-The majority of our changes belong to the child theme we're using, currently named
-alexandria-child. All the theme files are in `(root)/wtsscheduling/wp-content/themes/alexandria-child`.
-
-###Theme file inheritance
-Inheritance rules differ depending on the file. Quick list:
-
-- `style.css`: acts the way you'd expect with CSS; previous behaviors from other stylesheets
-are inherited, while new rules in the child's `style.css` overrides its parent.
-- `functions.php`: functions defined here are loaded before the ones defined in the parent
-theme. Any function definitions that match those of the parent theme's `functions.php` are
-used instead.
-- `header.php`: completely replaces the `header.php` of its parent. Using behavior from the
-parent theme means directly copying everything from the parent's `header.php`, which is
-exactly what we've done.
-
 # Installation instructions
 
 ###Install XAMPP

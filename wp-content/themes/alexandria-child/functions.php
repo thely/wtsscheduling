@@ -23,6 +23,5 @@ function register_wts_scripts () {
 	wp_enqueue_style('fullcal_css');
 }
 
-
 add_action('wp_enqueue_scripts', 'register_wts_scripts');
 ?>
