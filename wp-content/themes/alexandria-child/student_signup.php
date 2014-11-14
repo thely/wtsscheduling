@@ -5,6 +5,9 @@
  */
 get_header();
 ?>
-	<div id='calendar'></div>
-	<p>Maybe I work!</p>
+<?php while (have_posts()) :
+		the_post();?>
+	<?php get_template_part('content', 'page'); ?>
+<?php endwhile;
 
+get_footer(); ?>

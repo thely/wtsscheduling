@@ -78,6 +78,7 @@ function optionsframework_options() {
 											'ggrey' => $imagepath . 'ggrey.png',
 											'grebr' => $imagepath . 'grebr.png',
 											'brne' => $imagepath . 'brne.png',
+											'alge' => $imagepath . 'alge.png',
 											'child' => $imagepath . 'child.png')
 										);						
 

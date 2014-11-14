@@ -1,4 +1,16 @@
 
+Version: 2.1.1
+------------------------------------------
+Changed conditional css loading function.
+
+Version: 2.1.0
+------------------------------------------
+Updated options framework.
+
+Version: 2.0.37
+------------------------------------------
+Added new skin.
+
 Version: 2.0.36
 ------------------------------------------
 Added new skin.

@@ -22,11 +22,29 @@
         jQuery(document).ready(function() {
             jQuery('#calendar').fullCalendar({
                 events: {
-                    url: 'https://www.google.com/calendar/feeds/engima.in.my.soup%40gmail.com/public/basic',
+                    url: 'https://www.google.com/calendar/feeds/' +
+						 'enigma.in.my.soup%40gmail.com/public/basic',
                     className: 'test_events'
                 },
-                eventClick: function() {
-                    return false;
+                eventClick: function(calEvent) {
+			var id = calEvent.id;
+			id = id.replace("@google.com", "");
+			jQuery("#fld_4059292_1").val(id);
+			/*var url = "wp-content/themes/alexandria-child/cal_actions.php?id=" + id;
+			jQuery.ajax({
+				url: url,
+				type: "GET",
+				dataType: "text",
+				success: function(data) {
+					jQuery(this).css('border', '1px solid red');
+					console.log("Successful update!");
+					console.log(data);
+					var d = new Date(data);
+					var da = d.toLocaleDateString(); var ti = d.toLocaleTimeString();
+					jQuery("#the_time_is_now").text(da+" at "+ti+".");
+				}
+			});*/
+			return false;
                 },
                 header: {
                     left: "prev,next today",

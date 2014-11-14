@@ -8,17 +8,8 @@
 /* 
  * Loads the Options Panel
  */
-if ( !function_exists( 'optionsframework_init' ) ) {
-
-	/* Set the file path based on whether we're in a child theme or parent theme */
-
-
-		define('OPTIONS_FRAMEWORK_URL', get_template_directory() . '/admin/');
-		define('OPTIONS_FRAMEWORK_DIRECTORY', get_template_directory_uri() . '/admin/');
-
-
-	require_once (OPTIONS_FRAMEWORK_URL . 'options-framework.php');
-}
+define( 'OPTIONS_FRAMEWORK_DIRECTORY', get_template_directory_uri() . '/admin/' );
+require_once dirname( __FILE__ ) . '/admin/options-framework.php';
 
 if ( ! function_exists( 'alexandria_setup' ) ) :
 /**
@@ -220,7 +211,18 @@ function alexandria_scripts() {
 	
 	if( of_get_option('skin_style') == 'brne' ) {
 		wp_enqueue_style( 'alexandria-brne-style', get_template_directory_uri().'/skins/brne.css' );
-	}		
+	}
+	
+	if( of_get_option('skin_style') == 'alge' ) {
+		wp_enqueue_style( 'alexandria-alge-style', get_template_directory_uri().'/skins/alge.css' );
+	}
+	
+	global $wp_styles;
+	$wp_styles->add('alexandria_ie9', get_template_directory_uri().'/fixed.css');
+	$wp_styles->add_data('alexandria_ie9', 'conditional', 'lt IE 9');
+	$wp_styles->add('alexandria_ie8', get_template_directory_uri().'/ie.css');
+	$wp_styles->add_data('alexandria_ie8', 'conditional', 'lt IE 8');	
+	$wp_styles->enqueue(array('alexandria_ie9', 'alexandria_ie8'));			
 		
 	wp_enqueue_script( 'alexandria-tinynav', get_template_directory_uri() . '/js/tinynav.min.js', array('jquery'), false, false );
 	
@@ -238,18 +240,6 @@ function alexandria_scripts() {
 }
 endif; // alexandria_scripts
 add_action( 'wp_enqueue_scripts', 'alexandria_scripts' );
-
-if ( ! function_exists( 'alexandria_ltie9' ) ) :
-function alexandria_ltie9() {
-	echo "<!--[if lt IE 9]>
-<link rel='stylesheet' href='".get_template_directory_uri()."/fixed.css' type='text/css' media='all' />
-<![endif]-->";
-	echo "<!--[if lt IE 8]>
-<link rel='stylesheet' href='".get_template_directory_uri()."/ie.css' type='text/css' media='all' />
-<![endif]-->";
-}
-endif; // alexandria_ltie9
-add_action( 'wp_head', 'alexandria_ltie9', 9 );
 
 /**
  * Implement the Custom Header feature.
