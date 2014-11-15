@@ -27,6 +27,8 @@ Using some [reliable Wikihow instructions](http://www.wikihow.com/Install-Wordpr
 * Go to the next page and do the same thing for the option named `home`.
 * You should now see a local copy of the site available at `http://localhost/wordpress`!
 
+One more item. If you click on links and are brought to a page that says `Object not found!` then go into the admin dashboard locally and navigate to Settings > Permalinks. Copy the text currently in the Custom Permalink textbox to your clipboard, select `Default`, save, wait for the page to reload, select `Custom Permalinks` again, paste the text back into the textbox, and save once more. Links should now work on your page. Solution per [this](http://www.techsupportforum.com/forums/f167/xampp-and-wordpress-object-not-found-637295.html) post. (this is because this generates the proper .htaccess file).
+
 ###Backing up main site
 If you were following the directions above you may wonder how we got that sql file and what we can do to get a new one if needed. Using a plugin "WP BackItUp" makes the whole thing easy.
 
