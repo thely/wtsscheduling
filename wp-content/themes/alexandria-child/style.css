@@ -19,3 +19,28 @@
 .fc-time, .fc-title {
   color: #000;
 }
+
+/* Home page styles */
+.col-container {
+  width: 80%;
+  padding-left: 10%;
+  padding-right: 10%;
+}
+
+.col {
+  float: left;
+  width: 35%;
+  padding: 0% 7%;
+}
+
+.col-head {
+  font-size: 36px;
+}
+
+.col-content {
+  margin-bottom: 15px;
+}
+
+.col-button {
+  text-align: center;
+}

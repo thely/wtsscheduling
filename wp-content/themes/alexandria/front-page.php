@@ -8,7 +8,6 @@
 get_header(); ?>
 
 	<?php 
-		
 		if( !of_get_option('homepage_layout') || of_get_option('homepage_layout') == 'bone' ) {
 			get_template_part( 'index', 'bone' ); 
 		}elseif( of_get_option('homepage_layout') == 'btwo' ) {
