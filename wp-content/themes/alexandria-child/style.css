@@ -10,8 +10,12 @@
  Text Domain:	alexandria-child
 */
 
-@import url("../alexandria/style.css")
+@import url("../alexandria/style.css");
 
 /* =Theme Customization starts here
 ------------------------------------------------------ */
 
+/* Make text on calendar visible. */
+.fc-time, .fc-title {
+  color: #000;
+}
