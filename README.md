@@ -29,12 +29,12 @@ Using some [reliable Wikihow instructions](http://www.wikihow.com/Install-Wordpr
 
 One more item. If you click on links and are brought to a page that says `Object not found!` then go into the admin dashboard locally and navigate to Settings > Permalinks. Copy the text currently in the Custom Permalink textbox to your clipboard, select `Default`, save, wait for the page to reload, select `Custom Permalinks` again, paste the text back into the textbox, and save once more. Links should now work on your page. Solution per [this](http://www.techsupportforum.com/forums/f167/xampp-and-wordpress-object-not-found-637295.html) post. (this is because this generates the proper .htaccess file).
 
-###Backing up main site
+### Backing up main site
 If you were following the directions above you may wonder how we got that sql file and what we can do to get a new one if needed. Using a plugin "WP BackItUp" makes the whole thing easy.
 
 If a new backup needs to be generated, just login to the administrative panel of the main site and in the left sidebar select `WP BackItUp`. On this page, click the `Backup` button and wait a few minutes. During this time it is normal for the admin pages, website, everything to be unresponsive, so just sit tight until it is complete (and also don't do this very often). Once it is done you should see a new entry under `Available Backups` on that page. Click the `Download` link and the zip file download should start. Once that file is downloaded you can unzip it and inside you will find a copy of the `wp-content` directory including a file called `db-backup.sql`. This file can be imported locally to update your version of the database, but beware that you will lose all changes to the database that you've made locally (this can include changes to forms, pages, and the like).
 
-###Making changes, getting updated code
+### Making changes, getting updated code
 - `git pull`: updates your version of the code with the most recently pushed revisions. If you are about to push changes and haven't pulled the most recent revision, git will force you to do a git pull first.
 
 To push new code to the repo:

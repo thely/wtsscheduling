@@ -20,16 +20,19 @@
 <?php wp_head(); ?>
     <script>
         jQuery(document).ready(function() {
-            jQuery('#calendar').fullCalendar({
+            jQuery('div.wts_password input').attr("type", "password");
+        });
+            /*jQuery('#calendar').fullCalendar({
+                googleCalendarApiKey: 'AIzaSyCyVSdiyqBilsw3SUvFUMwqj4UjqLCw7AE',
                 events: {
-                    url: 'https://www.google.com/calendar/feeds/' +
-						 'enigma.in.my.soup%40gmail.com/public/basic',
+                    googleCalendarId: 'enigma.in.my.soup@gmail.com',
                     className: 'test_events'
                 },
                 eventClick: function(calEvent) {
-			var id = calEvent.id;
-			id = id.replace("@google.com", "");
-			jQuery("#fld_4059292_1").val(id);
+                    var id = calEvent.id;
+                    id = id.replace("@google.com", "");
+                    jQuery("#fld_4059292_1").val(id);
+                    return false;
 			/*var url = "wp-content/themes/alexandria-child/cal_actions.php?id=" + id;
 			jQuery.ajax({
 				url: url,
@@ -43,16 +46,14 @@
 					var da = d.toLocaleDateString(); var ti = d.toLocaleTimeString();
 					jQuery("#the_time_is_now").text(da+" at "+ti+".");
 				}
-			});*/
-			return false;
+			});
                 },
                 header: {
                     left: "prev,next today",
                     center: "title",
                     right: "agendaWeek,month"
                 }
-            });
-        });
+            });*/
     </script>
 	<style>
 		#calendar {
