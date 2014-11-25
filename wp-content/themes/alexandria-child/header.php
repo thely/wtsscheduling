@@ -21,7 +21,8 @@
     <script>
         jQuery(document).ready(function() {
             jQuery('div.wts_password input').attr("type", "password");
-            jQuery('#calendar').fullCalendar({
+        });
+            /*jQuery('#calendar').fullCalendar({
                 googleCalendarApiKey: 'AIzaSyCyVSdiyqBilsw3SUvFUMwqj4UjqLCw7AE',
                 events: {
                     googleCalendarId: 'enigma.in.my.soup@gmail.com',
@@ -45,15 +46,14 @@
 					var da = d.toLocaleDateString(); var ti = d.toLocaleTimeString();
 					jQuery("#the_time_is_now").text(da+" at "+ti+".");
 				}
-			});*/
+			});
                 },
                 header: {
                     left: "prev,next today",
                     center: "title",
                     right: "agendaWeek,month"
                 }
-            });
-        });
+            });*/
     </script>
 	<style>
 		#calendar {

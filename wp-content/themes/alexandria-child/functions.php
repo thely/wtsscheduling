@@ -1,6 +1,6 @@
 <?php
 
-function register_wts_scripts () {
+/*function register_wts_scripts () {
 	wp_register_script("custom-ui", get_stylesheet_directory_uri() . "/js/lib/jquery-ui.custom.min.js",
 		array('jquery'), time(), false);
 
@@ -23,6 +23,5 @@ function register_wts_scripts () {
 	wp_enqueue_style('fullcal_css');
 }
 
-
-add_action('wp_enqueue_scripts', 'register_wts_scripts');
+add_action('wp_enqueue_scripts', 'register_wts_scripts');*/
 ?>
