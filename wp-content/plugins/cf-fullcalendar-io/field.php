@@ -8,8 +8,10 @@
 <?php echo $wrapper_after; ?>
 
 <script type="text/javascript">
+
 var calChanges = {}; //JS Object to become JSON string output
 var CAL_DIV = "#<?php echo $field_id; ?>";  //div ID of the calendar's location
+
 jQuery(document).ready(function() {
 	jQuery(CAL_DIV).fullCalendar({
 		//Event sources
@@ -145,6 +147,4 @@ var fcMakeView = function() {
 
 	return views.toString();
 }
-
-
 </script>
