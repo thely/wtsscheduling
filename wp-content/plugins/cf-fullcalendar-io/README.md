@@ -34,6 +34,7 @@ The FullCal field turns all changes made to the calendar into a JSON string. If 
 Currently, the "select" option is disabled when editing is turned on, because otherwise the dragging/dropping/creating event actions tend to trigger it accidentally.
 
 If "editable" is turned on in your field config, entries will either be marked as "insert" or "update," based on if the action is creating a new event or updating an existing one.
+
 	{
 		"existing_event_id": {
 			"mode": "update",
