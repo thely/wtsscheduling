@@ -49,6 +49,13 @@
 	</div>
 </div>
 
+<div class="caldera-config-group">
+	<label for="{{_id}}_editable">Enable adding/dragging events</label>
+	<div class="caldera-config-field">
+		<input type="checkbox" class="field-config {{_id}}_editable" name="{{_name}}[editable]" value="1" {{#if editable}}checked="checked"{{/if}}>
+	</div>
+</div>
+
 <?php /*<div class="caldera-config-group">
 	<label>Input Option</label>
 	<div class="caldera-config-field">

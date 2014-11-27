@@ -25,12 +25,21 @@ jQuery(document).ready(function() {
 	    header: {
 	    	left: "prev,next today",
 	    	center: "title",
-	    	right: fc_make_view()
-	    }
+	    	right: fcMakeView()
+	    },
+	    minTime: "07:00:00",
+	    maxTime: "20:00:00",
+	    eventStartEditable: isEditable(),
+	    eventDurationEditable: isEditable(),
+	    eventLimit: true
 	});
 });
 
-var fc_make_view = function() {
+var isEditable = function() {
+	var isEdit = "<?php echo $field['config']['editable']?>";
+	return isEdit ? true : false;
+}
+var fcMakeView = function() {
 	var weekly = "<?php echo $field['config']['weekly']; ?>";
 	var monthly = "<?php echo $field['config']['monthly']; ?>";
 	var daily = "<?php echo $field['config']['daily']; ?>";
