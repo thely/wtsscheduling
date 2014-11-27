@@ -101,7 +101,7 @@ function my_handler_function($value, $field, $form){
 	// return a WP_Error to return and trigger an erro. the error will shown to the user
 	//return new WP_Error( 'error', 'Nope, Sorry. Try again.');
 
-	$value = "THIS IS HANDLER-FAKE $value.";
+	//$value = "THIS IS HANDLER-FAKE $value.";
 	return $value;
 }
 
