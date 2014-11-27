@@ -8,6 +8,25 @@
 <?php echo $wrapper_after; ?>
 
 <script type="text/javascript">
+// Returns true if the calendar field setings have editing enabled, false otherwise.
+var isEditable = function() {
+	var isEdit = "<?php echo $field['config']['editable']?>";
+	return isEdit ? true : false;
+}
+
+var fcMakeView = function() {
+	var weekly = "<?php echo $field['config']['weekly']; ?>";
+	var monthly = "<?php echo $field['config']['monthly']; ?>";
+	var daily = "<?php echo $field['config']['daily']; ?>";
+
+	var views = [];
+	if (monthly) { views[0] = "month"; }
+	if (weekly) { views[views.length] = "agendaWeek"; }
+	if (daily) { views[views.length] = "agendaDay"; }
+
+	return views.toString();
+}
+
 jQuery(document).ready(function() {
 	jQuery("#<?php echo $field_id; ?>").fullCalendar({
 	    googleCalendarApiKey: "<?php echo $field['config']['api_key']; ?>",
@@ -35,22 +54,6 @@ jQuery(document).ready(function() {
 	});
 });
 
-var isEditable = function() {
-	var isEdit = "<?php echo $field['config']['editable']?>";
-	return isEdit ? true : false;
-}
-var fcMakeView = function() {
-	var weekly = "<?php echo $field['config']['weekly']; ?>";
-	var monthly = "<?php echo $field['config']['monthly']; ?>";
-	var daily = "<?php echo $field['config']['daily']; ?>";
-
-	var views = [];
-	if (monthly) { views[0] = "month"; }
-	if (weekly) { views[views.length] = "agendaWeek"; }
-	if (daily) { views[views.length] = "agendaDay"; }
-
-	return views.toString();
-}
 
 
 </script>
