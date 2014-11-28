@@ -115,22 +115,9 @@ class SynthCal {
         );
 		*/
 		
-		$data = array(); // build a data array of submitted data
-		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
+		$data = $this->form_debug_information($form);
 
-		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
-			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
-				continue; //ignores buttons
-
-			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = $field_value; // get the field slug for the key instead
-		}
-
-/*		$client_id = '661144412361-38darqei4feaq1v1nser6uicujaq3afr.apps.googleusercontent.com'; //Client ID
-		$service_account_name = '661144412361-38darqei4feaq1v1nser6uicujaq3afr@developer.gserviceaccount.com'; //Email Address
-		$key_file_location = 'google-api/examples/My Project-c73e71398c4f.p12'; //key.p12
-		$calendar_id = "enigma.in.my.soup@gmail.com";*/
-
-	//Google Calendar connection; $config comes from the admin config panel
+		//Google Calendar connection; $config comes from the admin config panel
 		$client_id = $config['api_key'];
 		$service_account_name = $config['service_account'];
 		$key_file_location = $config['key_file_location'];
@@ -156,25 +143,81 @@ class SynthCal {
 			$client->getAuth()->refreshTokenWithAssertion($cred);
 		}
 		$_SESSION['service_token'] = $client->getAccessToken();
-		$results = $service->events->listEvents($calendar_id);
 
-	//Get more config information to get data to work with for event creation
+		//Get more config information to get data to work with for event creation
 		$event_id = Caldera_forms::do_magic_tags($config['events']);
 		$event_start = Caldera_forms::do_magic_tags($config['event_start']);
 		$event_end = Caldera_forms::do_magic_tags($config['event_end']);				
 		$author_email = Caldera_forms::do_magic_tags($config['author_email']);
+		
+		//JSON information from another field
+		$event_changes = Caldera_forms::do_magic_tags($config['events']);
+		$events_arr = json_decode(urldecode($event_changes), true);		
 
-	//Event times, for debugging
-		$theTime = new Google_Service_Calendar_EventDateTime();
+		if ($events_arr['mode'] == "select") {
+			$oldEvent = $service->events->get($calendar_id, $events_arr['id']);
+			$extProps2 = $oldEvent->getExtendedProperties();
+			$extProps = $extProps2->getPrivate();
+			if ($extProps['is_reserved'] == "true") {
+				echo "This time is already reserved!";
+				die;
+			}
+			else {
+				$extProps['is_reserved'] = "true";
+				$oldSummary = $oldEvent->getSummary();
+				$oldDescription = $oldEvent->getDescription();
+				
+				$oldEvent->setSummary("[RESERVED], " . $oldSummary);
+				$oldEvent->setDescription($oldDescription . "Reserved by $author_email.");
+				$extProps2->setPrivate(array_merge(array("student_email" => $author_email), $extProps));
+				$oldEvent->setExtendedProperties($extProps2);
 
-	//Generating extendedProperty arrays to put extra metadata in events
-		//$extProps = $this->extprops_by_center($data['which_center']);
+				$student = new Google_Service_Calendar_EventAttendee();
+				$student->setEmail($data['email_address']);
+				$attendees = array_merge(array($student), $oldEvent->getAttendees());
+				$oldEvent->setAttendees($attendees);
+				//$oldEvent->setAttendees($this->add_attendee($author_email, $oldEvent));
 
-		//$displayProps = new Google_Service_Calendar_EventExtendedProperties(); 
-		$displayProps = array();
+				$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
+			}
+		}
+		else if ($events_arr['mode'] == "edit") {
+			foreach($events_arr['events'] as $event) {
+				if ($event['mode'] == "insert") {
+					$newEvent = new Google_Service_Calendar_Event();
+					$newEvent->setSummary("**V2** set by $author_email");
+					$newEvent->setDescription("Tutor email: $author_email, tutor name: {$data['name']}.");
+					$newEvent->setStart($this->make_time($event['start']));
+					$newEvent->setEnd($this->make_time($event['end']));
+					$newEvent->setAttendees($this->add_attendee($author_email, null));
+
+					$extendedProperties = new Google_Service_Calendar_EventExtendedProperties();
+					$extendedProperties->setPrivate(array (
+						"tutor_email" 		=> $author_email,
+						"tutor_name" 		=> $data['name'],
+						"is_group" 			=> "false",
+						"is_reserved"		=> "false"
+					));
+					$extendedProperties->setShared(array());
+					$newEvent->setExtendedProperties($extendedProperties);
+
+					$createdEvent = $service->events->insert($calendar_id, $newEvent);
+				}
+				else if ($event['mode'] == "update") {
+					$oldEvent = $service->events->get($calendar_id, $event['id']);
+					$oldEvent->setStart($this->make_time($event['start']));
+					$oldEvent->setEnd($this->make_time($event['end']));
+
+					$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
+				}
+			}
+		}
+	
+		//$results = $service->events->listEvents($calendar_id);
 
 	//If an event_id is provided, we're getting/updating an event
-		if (!empty($event_id)) {
+
+/*		if (!empty($event_id)) {
 			$event = $service->events->get($calendar_id, $event_id);
 			$extProps2 = $event->getExtendedProperties();
 			$extProps = $extProps2->getPrivate();
@@ -203,30 +246,26 @@ class SynthCal {
 		}
 	//If no event_id is provided, we're making a new event
 		else {
+			$timezone = "America/New_York";
+
 			$event = new Google_Service_Calendar_Event();
 			$event->setSummary("set by $author_email");
 			$event->setDescription("Tutor email: $author_email, tutor name: {$data['name']} at the {$data['which_center']} Center.");
 
 			$start = new Google_Service_Calendar_EventDateTime();
 			$start->setDateTime($event_start);
+			$start->setTimeZone($timezone);
 			$event->setStart($start);
 
 			$end = new Google_Service_Calendar_EventDateTime();
 			$end->setDateTime($event_end);
+			$end->setTimeZone($timezone);
 			$event->setEnd($end);
 
 			$tutor = new Google_Service_Calendar_EventAttendee();
 			$tutor->setEmail($author_email);
 			$attendees = array($tutor);
 			$event->setAttendees($attendees);
-
-			/*$extProps['tutor'] = array();
-			$extProps['tutor']['email'] = $author_email;
-			$extProps['tutor']['username'] = $data['name'];
-			$extProps['tutor']['subjects'] = array("BIOL", "MUTH");
-			$extProps['tutor']['center'] = $data['which_center'];
-			$extProps['by_center'] = array();
-			$extProps['by_center']['is_group'] = "false";*/
 
 			$extendedProperties = new Google_Service_Calendar_EventExtendedProperties();
 			$extendedProperties->setPrivate(array (
@@ -245,75 +284,58 @@ class SynthCal {
 			$displayProps = $createdEvent->getExtendedProperties()->getPrivate();
 			echo $displayProps;
 		}
-		
-		/*$event->setDescription("edits as of something!");
-		$newEvent = $service->events->update($calendar_id, $event->getId(), $event);
-		$theTime = $newEvent->getStart()->getDateTime();*/
+*/		
 
 		// $data should contain slug:value
 		// Heres an output to show on screen.
-		echo '<pre>';
-		echo "Raw Data\r\n";
-		print_r( $raw_data );
+		/*echo '<pre>';
 	 
 		echo "\r\nClean Data\r\n";
 		print_r( $data );
-		
-		echo "\r\nConfig\r\n";
-		print_r( $config['events']);
-		echo "\r\nEvent time\r\n";
-		print_r($displayProps);
-		//print_r($client_id);
-		//print_r($service_account_name);
-		//print_r($calendar_id);
+
 		/*foreach ($results as $item) {
   			echo $item['summary'], ", [", $item['id'], "], ", $item['description'], "<br /> \n";
-		}*/
+		}
 
-		echo '</pre>';
-		die;
+		echo '</pre>';*/
 		// This example will return the users input and the date in the defined tags
 
-		/*$return_meta = array(
-			'api_key'		=>	Caldera_Forms::do_magic_tags( $config['api_key'] ),
-			'current_date'	=>	date('Y-m-d H:i:s')
+		$return_meta = array(
+			'first_test' => 'some_value'
 		);
 
-		return $return_meta;*/
-	
+		return $return_meta;
 	}
 
-	private function extprops_by_center( $center ) {
-		$center_details = array();
-		if ($center == "Tutoring") {
-			$center_details = array(
-				"is_group" => "",
-				"for_subject" => "",
-				"is_biweely" => ""
-			);
-		}
-		else if ($center == "Speaking") {
-			$center_details = array(
-				"speech_duration" => "",
-				"is_group" => "",
-			);
+	private function make_time($time){
+		$newTime = new Google_Service_Calendar_EventDateTime();
+		$newTime->setDateTime($time);
+		$newTime->setTimeZone("America/New_York");
+		return $newTime;
+	}
+
+	private function add_attendee($email, $event) {
+		$guest = new Google_Service_Calendar_EventAttendee();
+		$guest->setEmail($email);
+		if (isset($event)) {
+			return array_merge(array($event), $event->getAttendees());			
 		}
 		else {
-			$center_details = array(
-				"for_subject" => ""
-			);
+			return array($guest);
 		}
+	}
 
-		$extProps = array(
-			"tutor" => array(
-				"email" => "",
-				"username" => "",
-				"subjects" => array(),
-				"center" => ""
-			),
-			"center_specific" => $center_details,
-			"is_reserved" => "false"
-		);
+	private function form_debug_information($form) {
+		$data = array(); // build a data array of submitted data
+		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
+
+		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
+			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
+				continue; //ignores buttons
+
+			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = $field_value; // get the field slug for the key instead
+		}
+		return $data;
 	}
 }
 

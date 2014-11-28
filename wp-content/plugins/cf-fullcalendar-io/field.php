@@ -24,30 +24,11 @@
 </div>
 
 <script type="text/javascript">
-/*
-Example format:
-[
-	mode: "select",
-	id: "12347392814dffe"
-]
-[
-	mode: "selectsplit",
-	id: "1jf903jsj0f3jf",
-	start: "newtime",
-	end: "newtime"
-]
-[
-	mode: "edit",
-	update: {id: "234018304dj", mode: "update", start: "newtime", end: "newtime"},
-	insert: {id: "", mode: "insert", start: "newtime", end: "newtime"}
-]
-*/
-
-console.log("test1");
 
 jQuery(document).ready(function() {
-	console.log("test2");
-	var calChanges = {}; //JS Object to become JSON string output
+	// JS Object to become JSON string output
+	var calChanges = {};
+
 	// div id of the calendar's location
 	var CAL_DIV = "#<?php echo $field_id; ?>";
 	// div id of modal for this calendar.
@@ -74,6 +55,7 @@ jQuery(document).ready(function() {
 			calChanges = newEvent;
 		}
 		else if (newEvent['mode'] == "update") {
+
 			if ("tempId" in newEvent) { //moving around a newly created event
 				newEvent['mode'] = "insert";
 				calChanges[newEvent['tempId']] = newEvent;
@@ -92,6 +74,8 @@ jQuery(document).ready(function() {
 	// configuration.
 	var isEditable = function() {
 		var isEdit = "<?php echo $field['config']['editable']?>";
+		var isEditStr = isEdit ? "true" : "false";
+		console.log("Current value of isEdit is" + isEditStr + "!"); // DEBUG
 		return isEdit ? true : false;
 	}
 
@@ -220,7 +204,7 @@ jQuery(document).ready(function() {
 		timezone: "local",
 		eventClick: eventClickHandler,
 		//Adding new calendar events
-		selectable: true,
+		selectable: isEditable(),
 		selectHelper: true,
 		selectOverlap: false,
 		select: function(start, end) {
