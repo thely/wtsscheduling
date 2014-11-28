@@ -25,7 +25,7 @@ class WPBackItUp_Utility {
    }
    
 
-	function send_email($to,$subject,$message)
+	function send_email($to,$subject,$message,$attachments=array())
 	{
 		try {
 			//global $WPBackitup;
@@ -34,7 +34,7 @@ class WPBackItUp_Utility {
                 $headers[] = 'Content-type: text/html';
 				$headers[] = 'From: WP BackItUp '. '<'. $from_email .'>';
 
-				wp_mail($to, $subject, $message, $headers);
+				wp_mail($to, $subject, $message, $headers,$attachments);
                 $this->logger->log('(send_email)EMail Sent from:' .$from_email);
                 $this->logger->log('(send_email)EMail Sent to:' .$to);
 			}
@@ -67,5 +67,12 @@ class WPBackItUp_Utility {
 
         return $date_diff_seconds;
     }
-}	
+
+	function timestamp_diff_seconds($timestamp1,$timestamp2 ){
+		// get a difference represented as an int, number of seconds
+		$timestamp_diff_seconds = abs($timestamp1 - $timestamp2);
+
+		return $timestamp_diff_seconds;
+	}
+}
 
