@@ -13,6 +13,46 @@ var calChanges = {}; //JS Object to become JSON string output
 calChanges['events'] = {};
 var CAL_DIV = "#<?php echo $field_id; ?>";  //div ID of the calendar's location
 
+var tempId = 0;
+
+var updateCalChanges = function(newEvent) {
+//newData is always a single event's addition/change
+	if (newEvent['mode'] == "select") {
+		calChanges = newEvent;
+	}
+	else if (newEvent['mode'] == "update") {
+		if ("tempId" in newEvent) { //moving around a newly created event
+			newEvent['mode'] = "insert";
+			calChanges[newEvent['tempId']] = newEvent;
+		}
+		else { //moving around an existing event
+			calChanges[newEvent['id']] = newEvent;
+		}
+	}
+	else if (newEvent['mode'] == "insert") { //creating a new event
+		calChanges[newEvent["tempId"]] = newEvent;
+	}
+	console.log(encodeURI(JSON.stringify(calChanges, null, '\t')));
+	jQuery("input[name=<?php echo $field_name;?>]").val(encodeURI(JSON.stringify(calChanges)));
+}
+
+var isEditable = function() {
+	var isEdit = "<?php echo $field['config']['editable']?>";
+	return isEdit ? true : false;
+}
+var fcMakeView = function() {
+	var weekly = "<?php echo $field['config']['weekly']; ?>";
+	var monthly = "<?php echo $field['config']['monthly']; ?>";
+	var daily = "<?php echo $field['config']['daily']; ?>";
+
+	var views = [];
+	if (monthly) { views[0] = "month"; }
+	if (weekly) { views[views.length] = "agendaWeek"; }
+	if (daily) { views[views.length] = "agendaDay"; }
+
+	return views.toString();
+}
+
 jQuery(document).ready(function() {
 	jQuery(CAL_DIV).fullCalendar({
 		//Event sources
@@ -92,47 +132,4 @@ jQuery(document).ready(function() {
 	});
 });
 
-var tempId = 0;
-
-var updateCalChanges = function(newEvent) {
-//newData is always a single event's addition/change
-	if (newEvent['mode'] == "select") {
-		calChanges = newEvent;
-	}
-	else if (newEvent['mode'] == "update") {
-		calChanges['mode'] = "edit";
-		if ("tempId" in newEvent) { //moving around a newly created event
-			newEvent['mode'] = "insert";
-			calChanges['events'][newEvent['tempId']] = newEvent;
-		}
-		else { //moving around an existing event
-			calChanges['events'][newEvent['id']] = newEvent;
-		}
-	}
-	else if (newEvent['mode'] == "insert") { //creating a new event
-		calChanges['mode'] = "edit";
-		calChanges['events'][newEvent["tempId"]] = newEvent;
-	}
-	console.log(encodeURI(JSON.stringify(calChanges, null, '\t')));
-	jQuery("input[name=<?php echo $field_name;?>]").val(encodeURI(JSON.stringify(calChanges)));
-}
-
-var isEditable = function() {
-	var isEdit = "<?php echo $field['config']['editable']?>";
-	var isEditStr = isEdit ? "true" : "false";
-	console.log("Current value of isEdit is" + isEditStr + "!");
-	return isEdit ? true : false;
-}
-var fcMakeView = function() {
-	var weekly = "<?php echo $field['config']['weekly']; ?>";
-	var monthly = "<?php echo $field['config']['monthly']; ?>";
-	var daily = "<?php echo $field['config']['daily']; ?>";
-
-	var views = [];
-	if (monthly) { views[0] = "month"; }
-	if (weekly) { views[views.length] = "agendaWeek"; }
-	if (daily) { views[views.length] = "agendaDay"; }
-
-	return views.toString();
-}
 </script>
