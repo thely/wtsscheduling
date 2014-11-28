@@ -108,16 +108,19 @@ function my_handler_function($value, $field, $form){
 function register_fullcal_scripts () {
 	wp_enqueue_style("fc-ui-css", plugins_url("js/lib/cupertino/jquery-ui.min.css", __FILE__), array(), time(), 'all');	
 	wp_enqueue_style("fc-fullcal-css", plugins_url("js/fullcalendar.css", __FILE__), array(), time(), 'all');
+	wp_enqueue_style("fc-jquery-ui-timepicker-css", plugins_url("lib/jquery-ui-timepicker-addon.css", __FILE__), array(), time(), 'all');
 	wp_register_script("fc-custom-ui", plugins_url("js/lib/jquery-ui.min.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-moment-jq", plugins_url("js/lib/moment.min.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-fullcal", plugins_url("js/fullcalendar.min.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-gcal", plugins_url("js/gcal.js", __FILE__), array('jquery'), time(), false);
+	wp_register_script("fc-jquery-ui-timepicker", plugins_url("lib/jquery-ui-timepicker-addon.js", __FILE__), array('jquery', 'fc-custom-ui'), time(), false);
 
 
 	wp_enqueue_script('fc-custom-ui');
 	wp_enqueue_script('fc-moment-jq');
 	wp_enqueue_script('fc-fullcal');
 	wp_enqueue_script('fc-gcal');
+	wp_enqueue_script('fc-jquery-ui-timepicker-addon');
 	wp_enqueue_style('fc-fullcal-css');
 }
 
