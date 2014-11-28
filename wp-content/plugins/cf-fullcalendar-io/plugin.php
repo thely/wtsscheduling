@@ -59,11 +59,13 @@ function fullcal_field_register_function($fields){
 			"fc-fullcal",
 			"fc-gcal",
 			"fc-custom-ui",
-			"fc-moment-jq"																					// can be a handle to a regstered script or a url
+			"fc-moment-jq",																					// can be a handle to a regstered script or a url
+			"fc-jquery-ui-timepicker"
 		),
 		"styles" => array(	
 			"fc-ui-css",																	// styles array outside of setup are style sheets that are used in the frontend form
-			"fc-fullcal-css"																					// can be a handle to a regstered style or a url
+			"fc-fullcal-css",																					// can be a handle to a regstered style or a url
+			"fc-jquery-ui-timepicker-css"
 		)
 	);
 
@@ -120,7 +122,7 @@ function register_fullcal_scripts () {
 	wp_enqueue_script('fc-moment-jq');
 	wp_enqueue_script('fc-fullcal');
 	wp_enqueue_script('fc-gcal');
-	wp_enqueue_script('fc-jquery-ui-timepicker-addon');
+	wp_enqueue_script('fc-jquery-ui-timepicker');
 	wp_enqueue_style('fc-fullcal-css');
 }
 
