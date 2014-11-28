@@ -10,6 +10,7 @@
 <script type="text/javascript">
 
 var calChanges = {}; //JS Object to become JSON string output
+calChanges['events'] = {};
 var CAL_DIV = "#<?php echo $field_id; ?>";  //div ID of the calendar's location
 
 var tempId = 0;
@@ -82,7 +83,7 @@ jQuery(document).ready(function() {
 	    	return false;
 	    },
 	    //Adding new calendar events
-	    selectable: true,
+	    selectable: isEditable(),
 	    selectHelper: true,
 	    selectOverlap: false,
 	    select: function(start, end) {
@@ -130,23 +131,5 @@ jQuery(document).ready(function() {
 	    }
 	});
 });
-/*
-Example format:
-[
-	mode: "select",
-	id: "12347392814dffe"
-]
-[
-	mode: "selectsplit",
-	id: "1jf903jsj0f3jf",
-	start: "newtime",
-	end: "newtime"
-]
-[
-	mode: "edit",
-	update: {id: "234018304dj", mode: "update", start: "newtime", end: "newtime"},
-	insert: {id: "", mode: "insert", start: "newtime", end: "newtime"}
-]
-*/
 
 </script>
