@@ -8,14 +8,31 @@
 <?php echo $wrapper_after; ?>
 
 <script type="text/javascript">
-
+/*
+Example format:
+[
+	mode: "select",
+	id: "12347392814dffe"
+]
+[
+	mode: "selectsplit",
+	id: "1jf903jsj0f3jf",
+	start: "newtime",
+	end: "newtime"
+]
+[
+	mode: "edit",
+	update: {id: "234018304dj", mode: "update", start: "newtime", end: "newtime"},
+	insert: {id: "", mode: "insert", start: "newtime", end: "newtime"}
+]
+*/
 var calChanges = {}; //JS Object to become JSON string output
 var CAL_DIV = "#<?php echo $field_id; ?>";  //div ID of the calendar's location
 
 var tempId = 0;
 
 var updateCalChanges = function(newEvent) {
-//newData is always a single event's addition/change
+	//newData is always a single event's addition/change
 	if (newEvent['mode'] == "select") {
 		calChanges = newEvent;
 	}
@@ -39,6 +56,7 @@ var isEditable = function() {
 	var isEdit = "<?php echo $field['config']['editable']?>";
 	return isEdit ? true : false;
 }
+
 var fcMakeView = function() {
 	var weekly = "<?php echo $field['config']['weekly']; ?>";
 	var monthly = "<?php echo $field['config']['monthly']; ?>";
@@ -52,101 +70,89 @@ var fcMakeView = function() {
 	return views.toString();
 }
 
+/*
+ * Handle clicks on existing events.
+ * @param	calEvent	{Event Object}	the event clicked.
+ */
+var eventClickHandler = function(calEvent) {
+	if (!isEditable()) {
+		var id = calEvent.id;
+		id = id.replace("@google.com", "");
+		var eventData = {
+			mode: "select",
+			id: id
+		};
+		updateCalChanges(eventData);
+	}
+	return false;
+}
+
 jQuery(document).ready(function() {
 	jQuery(CAL_DIV).fullCalendar({
 		//Event sources
-	    googleCalendarApiKey: "<?php echo $field['config']['api_key']; ?>",
-	    events: {
-	        googleCalendarId: "<?php echo Caldera_forms::do_magic_tags($field['config']['cal_id']); ?>",
-	        className: 'test_events',
-	    },
-	    //View generation
-	    header: {
-	    	left: "prev,next today",
-	    	center: "title",
-	    	right: fcMakeView()
-	    },
-	    minTime: "07:00:00",
-	    maxTime: "20:00:00",
-	    //Selecting, for student sign-up
-	    eventClick: function(calEvent) {
-	    	if (!isEditable()) {
-		        var id = calEvent.id;
-		        id = id.replace("@google.com", "");
-		       	var eventData = {
-		    		mode: "select",
-		    		id: id
-		    	};
-		    	updateCalChanges(eventData);
-	    	}
-	    	return false;
-	    },
-	    //Adding new calendar events
-	    selectable: true,
-	    selectHelper: true,
-	    selectOverlap: false,
-	    select: function(start, end) {
-	    	var eventData = {
-	    		title: "new tutoring time",
-	    		start: start,
-	    		end: end,
-	    		tempId: "temp" + tempId
-	    	};
-	    	jQuery(CAL_DIV).fullCalendar('renderEvent', eventData, true);
-	    	eventData["mode"] = "insert";
-	    	eventData["id"] = "";
-	    	tempId++;
-	    	updateCalChanges(eventData);
-	    },
+		googleCalendarApiKey: "<?php echo $field['config']['api_key']; ?>",
+		events: {
+			googleCalendarId: "<?php echo Caldera_forms::do_magic_tags($field['config']['cal_id']); ?>",
+			className: 'test_events',
+		},
+		//View generation
+		header: {
+			left: "prev,next today",
+			center: "title",
+			right: fcMakeView()
+		},
+		minTime: "07:00:00",
+		maxTime: "20:00:00",
+		eventClick: eventClickHandler,
+		//Adding new calendar events
+		selectable: true,
+		selectHelper: true,
+		selectOverlap: false,
+		select: function(start, end) {
+			var eventData = {
+				title: "new tutoring time",
+				start: start,
+				end: end,
+				tempId: "temp" + tempId
+			};
+			jQuery(CAL_DIV).fullCalendar('renderEvent', eventData, true);
+			eventData["mode"] = "insert";
+			eventData["id"] = "";
+			tempId++;
+			updateCalChanges(eventData);
+		},
 
-	    //Dragging/dropping, for updating existing events
-	    eventStartEditable: isEditable(),
-	    eventDurationEditable: isEditable(),
-	    eventLimit: true,
-	    eventOverlap: false,
-	    eventDrop: function(event, delta, revertFunc) {
-	    	var eventData = {
-	    		mode: "update",
-	    		id: event.id,
-	    		start: event.start.format(),
-	    		end: event.end.format()
-	    	};
-	    	if ("tempId" in event) {
-	    		eventData['tempId'] = event.tempId;
-	    	}
-	    	updateCalChanges(eventData);
-	    },
-	    eventResize: function(event, delta, revertFunc) {
-	    	var eventData = {
-	    		mode: "update",
-	    		id: event.id,
-	    		start: event.start.format(),
-	    		end: event.end.format()
-	    	};
-	    	if ("tempId" in event) {
-	    		eventData['tempId'] = event.tempId;
-	    	}
-	    	updateCalChanges(eventData);
-	    }
+		//Dragging/dropping, for updating existing events
+		eventStartEditable: isEditable(),
+		eventDurationEditable: isEditable(),
+		eventLimit: true,
+		eventOverlap: false,
+		eventDrop: function(event, delta, revertFunc) {
+			var eventData = {
+				mode: "update",
+				id: event.id,
+				start: event.start.format(),
+				end: event.end.format()
+			};
+			if ("tempId" in event) {
+				eventData['tempId'] = event.tempId;
+			}
+			updateCalChanges(eventData);
+		},
+		eventResize: function(event, delta, revertFunc) {
+			var eventData = {
+				mode: "update",
+				id: event.id,
+				start: event.start.format(),
+				end: event.end.format()
+			};
+			if ("tempId" in event) {
+				eventData['tempId'] = event.tempId;
+			}
+			updateCalChanges(eventData);
+		}
 	});
 });
-/*
-Example format:
-[
-	mode: "select",
-	id: "12347392814dffe"
-]
-[
-	mode: "selectsplit",
-	id: "1jf903jsj0f3jf",
-	start: "newtime",
-	end: "newtime"
-]
-[
-	mode: "edit",
-	update: {id: "234018304dj", mode: "update", start: "newtime", end: "newtime"},
-	insert: {id: "", mode: "insert", start: "newtime", end: "newtime"}
-]
-*/
+
 
 </script>
