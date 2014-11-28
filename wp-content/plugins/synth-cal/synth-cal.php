@@ -215,6 +215,9 @@ class SynthCal {
 
 					$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
 				}
+				else if ($event['mode'] == "remove") { // Removing event.
+					$service->events->delete($calendar_id, $event['id']);
+				}
 			}
 		}
 

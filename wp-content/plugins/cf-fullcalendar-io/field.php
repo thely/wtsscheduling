@@ -72,6 +72,16 @@ jQuery(document).ready(function() {
 			else if (newEvent['mode'] == "insert") { // Creating a new event.
 				calChanges['events'][newEvent["tempId"]] = newEvent;
 			}
+			else if (newEvent['mode'] == "remove") { // Remove event.
+				// Event not yet saved on GCal, just remove it from the
+				// list of changes.
+				if ("tempId" in newEvent) {
+					delete calChanges['events'][newEvent["tempId"]];
+				}
+				else { // Removing an existing event.
+					calChanges['events'][newEvent["id"]] = newEvent;
+				}
+			}
 		}
 		updateFieldValue();
 	}
@@ -98,16 +108,19 @@ jQuery(document).ready(function() {
 		return views.toString();
 	}
 
+	/* Setting up dialog for event editing. */
 	// Form elements for event dialog box.
 	var startElt = jQuery(MODAL_DIV + ' .event-start');
 	var endElt = jQuery(MODAL_DIV + ' .event-end');
 	//var endElt = $(MODAL_DIV + ' .event-start');
 
-	// Setting up dialog for event editing.
+	// Called by modal to update selected event.
 	var editEvent = function() {
 		var calEvent = eventDialog.data('current-event');
+		eventDialog.data('current-event', null);
 		var startTime = startElt.datetimepicker('getDate');
 		var endTime = endElt.datetimepicker('getDate');
+		//  Update event with new times.
 		calEvent.start.hour(startTime.getHours());
 		calEvent.start.minutes(startTime.getMinutes());
 		calEvent.end.hour(endTime.getHours());
@@ -121,7 +134,15 @@ jQuery(document).ready(function() {
 	}
 
 	var removeEvent = function() {
-
+		var calEvent = eventDialog.data('current-event');
+		eventDialog.data('current-event', null);
+		calEvent['mode'] = "remove";
+		// Update field data.
+		updateCalChanges(calEvent);
+		// Update calendar display.
+		jQuery(CAL_DIV).fullCalendar('removeEvents', calEvent["id"]);
+		// Close event editor.
+		eventDialog.dialog("close");
 	}
 
 	// Create jquery-ui dialog for event property editing.
@@ -218,11 +239,11 @@ jQuery(document).ready(function() {
 				title: "new tutoring time",
 				start: start,
 				end: end,
-				tempId: "temp" + tempId
+				tempId: "temp" + tempId,
+				id: "temp" + tempId
 			};
 			jQuery(CAL_DIV).fullCalendar('renderEvent', eventData, true);
 			eventData["mode"] = "insert";
-			eventData["id"] = "";
 			tempId++;
 			updateCalChanges(eventData);
 		},
