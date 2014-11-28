@@ -10,6 +10,7 @@
 <script type="text/javascript">
 
 var calChanges = {}; //JS Object to become JSON string output
+calChanges['events'] = {};
 var CAL_DIV = "#<?php echo $field_id; ?>";  //div ID of the calendar's location
 
 jQuery(document).ready(function() {
@@ -42,7 +43,7 @@ jQuery(document).ready(function() {
 	    	return false;
 	    },
 	    //Adding new calendar events
-	    selectable: true,
+	    selectable: isEditable(),
 	    selectHelper: true,
 	    selectOverlap: false,
 	    select: function(start, end) {
@@ -90,24 +91,7 @@ jQuery(document).ready(function() {
 	    }
 	});
 });
-/*
-Example format:
-[
-	mode: "select",
-	id: "12347392814dffe"
-]
-[
-	mode: "selectsplit",
-	id: "1jf903jsj0f3jf",
-	start: "newtime",
-	end: "newtime"
-]
-[
-	mode: "edit",
-	update: {id: "234018304dj", mode: "update", start: "newtime", end: "newtime"},
-	insert: {id: "", mode: "insert", start: "newtime", end: "newtime"}
-]
-*/
+
 var tempId = 0;
 
 var updateCalChanges = function(newEvent) {
@@ -116,16 +100,18 @@ var updateCalChanges = function(newEvent) {
 		calChanges = newEvent;
 	}
 	else if (newEvent['mode'] == "update") {
+		calChanges['mode'] = "edit";
 		if ("tempId" in newEvent) { //moving around a newly created event
 			newEvent['mode'] = "insert";
-			calChanges[newEvent['tempId']] = newEvent;
+			calChanges['events'][newEvent['tempId']] = newEvent;
 		}
 		else { //moving around an existing event
-			calChanges[newEvent['id']] = newEvent;
+			calChanges['events'][newEvent['id']] = newEvent;
 		}
 	}
 	else if (newEvent['mode'] == "insert") { //creating a new event
-		calChanges[newEvent["tempId"]] = newEvent;
+		calChanges['mode'] = "edit";
+		calChanges['events'][newEvent["tempId"]] = newEvent;
 	}
 	console.log(encodeURI(JSON.stringify(calChanges, null, '\t')));
 	jQuery("input[name=<?php echo $field_name;?>]").val(encodeURI(JSON.stringify(calChanges)));
@@ -133,6 +119,8 @@ var updateCalChanges = function(newEvent) {
 
 var isEditable = function() {
 	var isEdit = "<?php echo $field['config']['editable']?>";
+	var isEditStr = isEdit ? "true" : "false";
+	console.log("Current value of isEdit is" + isEditStr + "!");
 	return isEdit ? true : false;
 }
 var fcMakeView = function() {
