@@ -108,7 +108,7 @@ function my_handler_function($value, $field, $form){
 function register_fullcal_scripts () {
 	wp_enqueue_style("fc-ui-css", plugins_url("js/lib/cupertino/jquery-ui.min.css", __FILE__), array(), time(), 'all');	
 	wp_enqueue_style("fc-fullcal-css", plugins_url("js/fullcalendar.css", __FILE__), array(), time(), 'all');
-	wp_register_script("fc-custom-ui", plugins_url("js/lib/jquery-ui.custom.min.js", __FILE__), array('jquery'), time(), false);
+	wp_register_script("fc-custom-ui", plugins_url("js/lib/jquery-ui.min.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-moment-jq", plugins_url("js/lib/moment.min.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-fullcal", plugins_url("js/fullcalendar.min.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-gcal", plugins_url("js/gcal.js", __FILE__), array('jquery'), time(), false);
