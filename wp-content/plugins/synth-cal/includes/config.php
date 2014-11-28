@@ -55,10 +55,10 @@
 	</div>
 </div>
 <div class="caldera-config-group">
-	<label for="{{_id}}_events">Event information insert</label>
+	<label for="{{_id}}_events">Event changes</label>
 	<div class="caldera-config-field">
 		<input type="text" id="{{_id}}_events" class="block-input field-config magic-tag-enabled" name="{{_name}}[events]" value="{{events}}">
-		<p>Currently just an event ID.</p>
+		<p>Required. Use a magic tag corresponding to the FullCalendar field you want processed.</p>
 	</div>
 </div>
 <div class="caldera-config-group">
@@ -66,19 +66,5 @@
 	<div class="caldera-config-field">
 		<input type="text" id="{{_id}}_author_email" class="block-input field-config magic-tag-enabled" name="{{_name}}[author_email]" value="{{author_email}}">
 		<p>Time-adder's email</p>
-	</div>
-</div>
-<div class="caldera-config-group">
-	<label for="{{_id}}_event_start">Event start</label>
-	<div class="caldera-config-field">
-		<input type="text" id="{{_id}}_event_start" class="block-input field-config magic-tag-enabled" name="{{_name}}[event_start]" value="{{event_start}}">
-		<p>Start time of the event</p>
-	</div>
-</div>
-<div class="caldera-config-group">
-	<label for="{{_id}}_event_end">Event end</label>
-	<div class="caldera-config-field">
-		<input type="text" id="{{_id}}_event_end" class="block-input field-config magic-tag-enabled" name="{{_name}}[event_end]" value="{{event_end}}">
-		<p>End time of the event</p>
 	</div>
 </div>

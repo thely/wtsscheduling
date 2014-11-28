@@ -28,7 +28,7 @@
 jQuery(document).ready(function() {
 	// JS Object to become JSON string output
 	var calChanges = {};
-
+	calChanges['events'] = {};
 	// div id of the calendar's location
 	var CAL_DIV = "#<?php echo $field_id; ?>";
 	// div id of modal for this calendar.
@@ -50,22 +50,28 @@ jQuery(document).ready(function() {
 	 * @param	newEvent
 	 */
 	var updateCalChanges = function(newEvent) {
-		//newData is always a single event's addition/change
+		// Event was selected, used when reserving timeslot(s).
 		if (newEvent['mode'] == "select") {
+			// Set mode for synth-cal processor.
+			calChanges['mode'] = "select";
 			calChanges = newEvent;
 		}
-		else if (newEvent['mode'] == "update") {
-
-			if ("tempId" in newEvent) { //moving around a newly created event
-				newEvent['mode'] = "insert";
-				calChanges[newEvent['tempId']] = newEvent;
+		else {
+			// Set mode for synth-cal processor.
+			calChanges['mode'] = "edit";
+			if (newEvent['mode'] == "update") {
+				// Making changes to an event not yet saved on GCal.
+				if ("tempId" in newEvent) {
+					newEvent['mode'] = "insert";
+					calChanges['events'][newEvent['tempId']] = newEvent;
+				}
+				else { // Making changes to an existing event.
+					calChanges['events'][newEvent['id']] = newEvent;
+				}
 			}
-			else { //moving around an existing event
-				calChanges[newEvent['id']] = newEvent;
+			else if (newEvent['mode'] == "insert") { // Creating a new event.
+				calChanges['events'][newEvent["tempId"]] = newEvent;
 			}
-		}
-		else if (newEvent['mode'] == "insert") { //creating a new event
-			calChanges[newEvent["tempId"]] = newEvent;
 		}
 		updateFieldValue();
 	}

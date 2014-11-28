@@ -109,6 +109,8 @@ class DebugProcessor {
 		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
 
 		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
+			if( in_array( $field_id, array( '_entry_id', '_entry_token' ) ) )
+				continue; // Ignores irrelevant debug fields.
 			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
 				continue; //ignores buttons
 

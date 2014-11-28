@@ -14,7 +14,7 @@
 // Add field type config to caldera forms fields
 // use a function name that is unique of if whithin a class, array($this, 'method_to_use')
 add_filter('caldera_forms_get_field_types', 'fullcal_field_register_function');
-define(FC_URL, plugin_dir_path(__FILE__));
+define('FC_URL', plugin_dir_path(__FILE__));
 /**
  * field type register function to add new field to registered fields array
  *

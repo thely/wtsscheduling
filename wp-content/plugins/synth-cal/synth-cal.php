@@ -14,7 +14,7 @@ function register_my_session() {
 }
 
 add_action('init', 'register_my_session');
-define(SYNTH_URL, plugin_dir_path(__FILE__));
+define('SYNTH_URL', plugin_dir_path(__FILE__));
 require_once(SYNTH_URL . 'google-api/autoload.php'); 
 
 
@@ -117,7 +117,8 @@ class SynthCal {
 		
 		$data = $this->form_debug_information($form);
 
-		//Google Calendar connection; $config comes from the admin config panel
+		// Google Calendar connection information, populated by
+		// processor configuration set in form.
 		$client_id = $config['api_key'];
 		$service_account_name = $config['service_account'];
 		$key_file_location = $config['key_file_location'];
@@ -154,35 +155,39 @@ class SynthCal {
 		$event_changes = Caldera_forms::do_magic_tags($config['events']);
 		$events_arr = json_decode(urldecode($event_changes), true);		
 
+		// One or more events was selected to be reserved.
 		if ($events_arr['mode'] == "select") {
-			$oldEvent = $service->events->get($calendar_id, $events_arr['id']);
-			$extProps2 = $oldEvent->getExtendedProperties();
-			$extProps = $extProps2->getPrivate();
-			if ($extProps['is_reserved'] == "true") {
-				echo "This time is already reserved!";
-				die;
-			}
-			else {
-				$extProps['is_reserved'] = "true";
-				$oldSummary = $oldEvent->getSummary();
-				$oldDescription = $oldEvent->getDescription();
-				
-				$oldEvent->setSummary("[RESERVED], " . $oldSummary);
-				$oldEvent->setDescription($oldDescription . "Reserved by $author_email.");
-				$extProps2->setPrivate(array_merge(array("student_email" => $author_email), $extProps));
-				$oldEvent->setExtendedProperties($extProps2);
+			foreach($events_arr['events'] as $event) {
+				$oldEvent = $service->events->get($calendar_id, $event['id']);
+				$extProps2 = $oldEvent->getExtendedProperties();
+				$extProps = $extProps2->getPrivate();
+				if ($extProps['is_reserved'] == "true") {
+					echo "This time is already reserved!";
+					die;
+				}
+				else {
+					$extProps['is_reserved'] = "true";
+					$oldSummary = $oldEvent->getSummary();
+					$oldDescription = $oldEvent->getDescription();
+					
+					$oldEvent->setSummary("[RESERVED], " . $oldSummary);
+					$oldEvent->setDescription($oldDescription . "Reserved by $author_email.");
+					$extProps2->setPrivate(array_merge(array("student_email" => $author_email), $extProps));
+					$oldEvent->setExtendedProperties($extProps2);
 
-				$student = new Google_Service_Calendar_EventAttendee();
-				$student->setEmail($data['email_address']);
-				$attendees = array_merge(array($student), $oldEvent->getAttendees());
-				$oldEvent->setAttendees($attendees);
-				//$oldEvent->setAttendees($this->add_attendee($author_email, $oldEvent));
+					$student = new Google_Service_Calendar_EventAttendee();
+					$student->setEmail($data['email_address']);
+					$attendees = array_merge(array($student), $oldEvent->getAttendees());
+					$oldEvent->setAttendees($attendees);
+					//$oldEvent->setAttendees($this->add_attendee($author_email, $oldEvent));
 
-				$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
+					$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
+				}
 			}
 		}
 		else if ($events_arr['mode'] == "edit") {
 			foreach($events_arr['events'] as $event) {
+				// New event created.
 				if ($event['mode'] == "insert") {
 					$newEvent = new Google_Service_Calendar_Event();
 					$newEvent->setSummary("**V2** set by $author_email");
@@ -203,7 +208,7 @@ class SynthCal {
 
 					$createdEvent = $service->events->insert($calendar_id, $newEvent);
 				}
-				else if ($event['mode'] == "update") {
+				else if ($event['mode'] == "update") { // Existing event updated.
 					$oldEvent = $service->events->get($calendar_id, $event['id']);
 					$oldEvent->setStart($this->make_time($event['start']));
 					$oldEvent->setEnd($this->make_time($event['end']));
@@ -212,93 +217,6 @@ class SynthCal {
 				}
 			}
 		}
-	
-		//$results = $service->events->listEvents($calendar_id);
-
-	//If an event_id is provided, we're getting/updating an event
-
-/*		if (!empty($event_id)) {
-			$event = $service->events->get($calendar_id, $event_id);
-			$extProps2 = $event->getExtendedProperties();
-			$extProps = $extProps2->getPrivate();
-			if ($extProps['is_reserved'] == "true") {
-				echo "This time is already reserved!";
-				die;
-			}
-			else {
-				$extProps['is_reserved'] = "true";
-				$old_title = $event->getSummary();
-				$event->setSummary("[RESERVED], $old_title");
-				$old_desc = $event->getDescription();
-				$event->setDescription("$old_desc Reserved by {$data['email_address']}.");
-				$extProps2->setPrivate(array_merge(array("student_email" => $data['email_address']), $extProps));
-				$event->setExtendedProperties($extProps2);
-
-				$student = new Google_Service_Calendar_EventAttendee();
-				$student->setEmail($data['email_address']);
-				$attendees = array_merge(array($student), $event->getAttendees());
-				$event->setAttendees($attendees);
-
-				$newEvent = $service->events->update($calendar_id, $event->getId(), $event);
-			}
-			$theTime = $event->getStart()->getDateTime();
-
-		}
-	//If no event_id is provided, we're making a new event
-		else {
-			$timezone = "America/New_York";
-
-			$event = new Google_Service_Calendar_Event();
-			$event->setSummary("set by $author_email");
-			$event->setDescription("Tutor email: $author_email, tutor name: {$data['name']} at the {$data['which_center']} Center.");
-
-			$start = new Google_Service_Calendar_EventDateTime();
-			$start->setDateTime($event_start);
-			$start->setTimeZone($timezone);
-			$event->setStart($start);
-
-			$end = new Google_Service_Calendar_EventDateTime();
-			$end->setDateTime($event_end);
-			$end->setTimeZone($timezone);
-			$event->setEnd($end);
-
-			$tutor = new Google_Service_Calendar_EventAttendee();
-			$tutor->setEmail($author_email);
-			$attendees = array($tutor);
-			$event->setAttendees($attendees);
-
-			$extendedProperties = new Google_Service_Calendar_EventExtendedProperties();
-			$extendedProperties->setPrivate(array (
-				"tutor_email" 		=> $author_email,
-				"tutor_name" 		=> $data['name'],
-				"tutor_center" 		=> $data['which_center'],
-				"tutor_subjects"	=> "BIOL,MUTH",
-				"is_group" 			=> "false",
-				"is_reserved"		=> "false"
-			));
-			$extendedProperties->setShared(array());
-			$event->setExtendedProperties($extendedProperties);
-
-			$createdEvent = $service->events->insert($calendar_id, $event);
-			$theTime = $createdEvent->getStart()->getDateTime();
-			$displayProps = $createdEvent->getExtendedProperties()->getPrivate();
-			echo $displayProps;
-		}
-*/		
-
-		// $data should contain slug:value
-		// Heres an output to show on screen.
-		/*echo '<pre>';
-	 
-		echo "\r\nClean Data\r\n";
-		print_r( $data );
-
-		/*foreach ($results as $item) {
-  			echo $item['summary'], ", [", $item['id'], "], ", $item['description'], "<br /> \n";
-		}
-
-		echo '</pre>';*/
-		// This example will return the users input and the date in the defined tags
 
 		$return_meta = array(
 			'first_test' => 'some_value'
@@ -330,6 +248,8 @@ class SynthCal {
 		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
 
 		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
+			if( in_array( $field_id, array( '_entry_id', '_entry_token' ) ) )
+				continue; // Ignores irrelevant debug fields.
 			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
 				continue; //ignores buttons
 
