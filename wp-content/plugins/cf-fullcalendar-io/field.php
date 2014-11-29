@@ -90,7 +90,16 @@ jQuery(document).ready(function() {
 	// configuration.
 	var isEditable = function() {
 		var isEdit = "<?php echo $field['config']['editable']?>";
-		var isEditStr = isEdit ? "true" : "false";
+		var isEditStr = isEdit ? "true" : "false"; // DEBUG
+		console.log("Current value of isEdit is" + isEditStr + "!"); // DEBUG
+		return isEdit ? true : false;
+	}
+
+	// Return true if calendar events should be editable, per form
+	// configuration.
+	var isEditableInMonthlyView = function() {
+		var isEdit = "<?php echo $field['config']['monthlyselecting']?>";
+		var isEditStr = isEdit ? "true" : "false"; // DEBUG
 		console.log("Current value of isEdit is" + isEditStr + "!"); // DEBUG
 		return isEdit ? true : false;
 	}
@@ -238,6 +247,58 @@ jQuery(document).ready(function() {
 				}
 			}
 		}
+	/*
+	 * Handle selection of empty time slot/day. If the time slot clicked
+	 * was in weekly or daily view, start and end will correspond to the
+	 * start and end time of the slot clicked, otherwise they will be
+	 * ambiguous moments.
+	 *
+	 * @param	start	{Moment}	the start time of the time slot clicked.
+	 * @param	end	{Moment}	the end time of the time slot clicked.
+	 * @param	hasEvents	{Boolean}	optional, whether or not the
+	 *   selected date period has existing events. The select event is
+	 *   fired by fullcalendar only on empty date cells, this is for 
+	 *   other functions to call this method.
+	 */
+	var selectHandler = function(start, end, hasEvents) {
+		// Creates a new event with the given start and end time.
+		var createNewEvent = function(newStart, newEnd) {
+			var eventData = {
+				title: "new tutoring time",
+				start: start,
+				end: end,
+				tempId: "temp" + tempId,
+				id: "temp" + tempId
+			};
+			jQuery(CAL_DIV).fullCalendar('renderEvent', eventData, true);
+			eventData["mode"] = "insert";
+			tempId++;
+			updateCalChanges(eventData);
+		}
+		// Event created clicking in weekly/daily view.
+		if (start.hasTime()) {
+			createNewEvent(start, end);
+		} else { // Event created clicking in monthly view.
+			// Currently should not be invoked.
+			/*// There are already times set for this date.
+			if (hasEvents) {
+				// Get earliest block of 30 minutes available.
+				var eventsToday = jQuery(CAL_DIV).fullCalendar('clientEvents', function(event) {
+					event.start.isSame(end, 'day');
+				});
+				console.log(eventsToday);
+			} else { // There are no other times set for this date yet.
+				var startMoment = this.calendar.moment(end.format());
+				startMoment.time('07:00:00');
+				var endMoment = moment(startMoment).add(30, 'minutes');
+				createNewEvent(startMoment, endMoment);
+			}*/
+		}
+	}
+
+	var dayClickHandler = function(date) {
+		//selectHandler(date, date, true);
+		console.log("Test day click!");
 	}
 
 	// Create FullCalendar element.
@@ -260,22 +321,15 @@ jQuery(document).ready(function() {
 		eventClick: eventClickHandler,
 		eventRender: eventRenderHandler,
 		//Adding new calendar events
-		selectable: isEditable(),
+		dayClick: dayClickHandler,
+		// For adding new calendar events
+		selectable: {
+			month: isEditableInMonthlyView(),
+			'default': isEditable()
+		},
 		selectHelper: true,
 		selectOverlap: false,
-		select: function(start, end) {
-			var eventData = {
-				title: "new tutoring time",
-				start: start,
-				end: end,
-				tempId: "temp" + tempId,
-				id: "temp" + tempId
-			};
-			jQuery(CAL_DIV).fullCalendar('renderEvent', eventData, true);
-			eventData["mode"] = "insert";
-			tempId++;
-			updateCalChanges(eventData);
-		},
+		select: selectHandler,
 		//Dragging/dropping, for updating existing events
 		eventStartEditable: isEditable(),
 		eventDurationEditable: isEditable(),
