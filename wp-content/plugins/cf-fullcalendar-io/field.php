@@ -54,7 +54,7 @@ jQuery(document).ready(function() {
 		if (newEvent['mode'] == "select") {
 			// Set mode for synth-cal processor.
 			calChanges['mode'] = "select";
-			calChanges = newEvent;
+			calChanges['events'][newEvent['id']] = newEvent;
 		}
 		else {
 			// Set mode for synth-cal processor.

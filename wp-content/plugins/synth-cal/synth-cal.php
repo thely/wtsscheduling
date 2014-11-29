@@ -124,26 +124,10 @@ class SynthCal {
 		$key_file_location = $config['key_file_location'];
 		$calendar_id = $config['calendar_id'];
 
+		//Briefer service config - mostly in a function now		
 		$client = new Google_Client();
 		$client->setApplicationName("wtsscheduler");
-		$service = new Google_Service_Calendar($client);
-
-		if (isset($_SESSION['service_token'])) {
-			$client->setAccessToken($_SESSION['service_token']);
-		}
-		$key = file_get_contents(SYNTH_URL . $key_file_location);
-		$cred = new Google_Auth_AssertionCredentials(
-	    	$service_account_name,
-		    array('https://www.googleapis.com/auth/calendar',
-	   	  		'https://www.googleapis.com/auth/calendar.readonly'),
-		    $key
-		);
-
-		$client->setAssertionCredentials($cred);
-		if($client->getAuth()->isAccessTokenExpired()) {
-			$client->getAuth()->refreshTokenWithAssertion($cred);
-		}
-		$_SESSION['service_token'] = $client->getAccessToken();
+		$service = $this->start_service($client, $service_account_name, $key_file_location);
 
 		//Get more config information to get data to work with for event creation
 		$event_id = Caldera_forms::do_magic_tags($config['events']);
@@ -157,13 +141,17 @@ class SynthCal {
 
 		// One or more events was selected to be reserved.
 		if ($events_arr['mode'] == "select") {
-			foreach($events_arr['events'] as $event) {
+			foreach($events_arr['events'] as $event) { 
 				$oldEvent = $service->events->get($calendar_id, $event['id']);
 				$extProps2 = $oldEvent->getExtendedProperties();
+				if ($extProps2 == null) {
+					$this->echo_error("That event can't be selected.");
+					return array("error-cause" => "incorrect event type");
+				}
 				$extProps = $extProps2->getPrivate();
 				if ($extProps['is_reserved'] == "true") {
-					echo "This time is already reserved!";
-					die;
+					$this->echo_error("This time is already reserved.");
+					return array("error-cause" => "selected reserved time");
 				}
 				else {
 					$extProps['is_reserved'] = "true";
@@ -174,12 +162,7 @@ class SynthCal {
 					$oldEvent->setDescription($oldDescription . "Reserved by $author_email.");
 					$extProps2->setPrivate(array_merge(array("student_email" => $author_email), $extProps));
 					$oldEvent->setExtendedProperties($extProps2);
-
-					$student = new Google_Service_Calendar_EventAttendee();
-					$student->setEmail($data['email_address']);
-					$attendees = array_merge(array($student), $oldEvent->getAttendees());
-					$oldEvent->setAttendees($attendees);
-					//$oldEvent->setAttendees($this->add_attendee($author_email, $oldEvent));
+					$oldEvent->setAttendees($this->add_attendee($author_email, $oldEvent));
 
 					$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
 				}
@@ -235,15 +218,43 @@ class SynthCal {
 		return $newTime;
 	}
 
-	private function add_attendee($email, $event) {
+	private function add_attendee($email, &$event) {
 		$guest = new Google_Service_Calendar_EventAttendee();
 		$guest->setEmail($email);
 		if (isset($event)) {
-			return array_merge(array($event), $event->getAttendees());			
+			return array_merge(array($guest), $event->getAttendees());			
 		}
 		else {
 			return array($guest);
 		}
+	}
+
+	private function start_service(&$client, $service_account_name, $key_file_location) {
+		$service = new Google_Service_Calendar($client);
+
+		if (isset($_SESSION['service_token'])) {
+			$client->setAccessToken($_SESSION['service_token']);
+		}
+		$key = file_get_contents(SYNTH_URL . $key_file_location);
+		$cred = new Google_Auth_AssertionCredentials(
+	    	$service_account_name,
+		    array('https://www.googleapis.com/auth/calendar',
+	   	  		'https://www.googleapis.com/auth/calendar.readonly'),
+		    $key
+		);
+
+		$client->setAssertionCredentials($cred);
+		if($client->getAuth()->isAccessTokenExpired()) {
+			$client->getAuth()->refreshTokenWithAssertion($cred);
+		}
+		$_SESSION['service_token'] = $client->getAccessToken();
+		return $service;
+	}
+
+	private function echo_error($text) {
+		echo "<pre style='border: 1px solid red; text-align: center;'>";
+		echo "Error: $text";
+		echo "</pre>";
 	}
 
 	private function form_debug_information($form) {
