@@ -2,8 +2,7 @@
 /**
  * Plugin Name: Caldera Forms - Reservation Processor
  * Plugin URI:  
- * Description: Processor to handle incoming reservations made using
- *   fullcalendar field.
+ * Description: Processor to handle incoming reservations made using fullcalendar field.
  * Version:     1.0.0
  * Author:      Chris Hunt
  * Author URI:  
@@ -207,6 +206,11 @@ class Reservation_Processor {
 		return $newTime;
 	}
 
+	private function echo_error($text) {
+		echo "<pre style='border: 1px solid red; text-align: center;'>";
+		echo "Error: $text";
+		echo "</pre>";
+	}
 }
 
 // Create the instance. (can be done however you like)
