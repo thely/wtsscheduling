@@ -7,12 +7,14 @@
 <?php echo $field_after; ?>
 <?php echo $wrapper_after; ?>
 <?php
-// Takes a key and returns "true" if the key is present in $config and
-// has a truthy value, "false" otherwise.
-function getConfigAsBool($key, $field)
-{
-	return (array_key_exists($key, $field['config']) &&
-		  	$field['config'][$key]) ? "true" : "false";
+if (!function_exists('getConfigAsBool')) {
+	// Takes a key and returns "true" if the key is present in $config and
+	// has a truthy value, "false" otherwise.
+	function getConfigAsBool($key, $field)
+	{
+		return (array_key_exists($key, $field['config']) &&
+			  	$field['config'][$key]) ? "true" : "false";
+	}
 }
 ?>
 
