@@ -212,6 +212,34 @@ jQuery(document).ready(function() {
 		return false;
 	}
 
+	var renderingPreReqs = function(calEvent) {
+		if ("extendedProperties" in calEvent) { 
+			if ("private" in calEvent.extendedProperties) {
+				if ("is_reserved" in calEvent.extendedProperties['private']){
+					return true;
+				} else { return false; }
+			} else { return false; }
+		} else { return false; }
+	}
+
+	var eventRenderHandler = function(calEvent, element) {
+		if (renderingPreReqs(calEvent)) {
+			if (calEvent.extendedProperties['private']['is_reserved'] === "true"){ 
+				if (!isEditable()) { //hide reserved times from the student
+					return false; 
+				}
+				else { //immobilize reserved times for the tutors
+					console.log(element);
+					//jQuery(element).css("border", "1px solid gray");
+					jQuery(element).css("background-color", "#777");
+					calEvent.eventColor = "blue";
+					calEvent.startEditable = false;
+					calEvent.durationEditable = false;
+				}
+			}
+		}
+	}
+
 	// Create FullCalendar element.
 	jQuery(CAL_DIV).fullCalendar({
 		//Event sources
@@ -230,6 +258,7 @@ jQuery(document).ready(function() {
 		maxTime: "20:00:00",
 		timezone: "local",
 		eventClick: eventClickHandler,
+		eventRender: eventRenderHandler,
 		//Adding new calendar events
 		selectable: isEditable(),
 		selectHelper: true,
