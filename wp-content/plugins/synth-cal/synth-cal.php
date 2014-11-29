@@ -15,7 +15,8 @@ function register_my_session() {
 
 add_action('init', 'register_my_session');
 define('SYNTH_URL', plugin_dir_path(__FILE__));
-require_once(SYNTH_URL . 'google-api/autoload.php'); 
+define('GOOGLE_API_URL', SYNTH_URL . 'google-api/autoload.php');
+require_once(GOOGLE_API_URL); 
 
 
 class SynthCal {
@@ -129,46 +130,20 @@ class SynthCal {
 		$client->setApplicationName("wtsscheduler");
 		$service = $this->start_service($client, $service_account_name, $key_file_location);
 
+		// Make service available for other processors.
+		$transdata['gcal_service'] = $service;
+		$transdata['gcal_require'] = GOOGLE_API_URL;
+
 		//Get more config information to get data to work with for event creation
 		$event_id = Caldera_forms::do_magic_tags($config['events']);
-		$event_start = Caldera_forms::do_magic_tags($config['event_start']);
-		$event_end = Caldera_forms::do_magic_tags($config['event_end']);				
 		$author_email = Caldera_forms::do_magic_tags($config['author_email']);
 		
 		//JSON information from another field
 		$event_changes = Caldera_forms::do_magic_tags($config['events']);
-		$events_arr = json_decode(urldecode($event_changes), true);		
+		$events_arr = json_decode(urldecode($event_changes), true);
 
-		// One or more events was selected to be reserved.
-		if ($events_arr['mode'] == "select") {
-			foreach($events_arr['events'] as $event) { 
-				$oldEvent = $service->events->get($calendar_id, $event['id']);
-				$extProps2 = $oldEvent->getExtendedProperties();
-				if ($extProps2 == null) {
-					$this->echo_error("That event can't be selected.");
-					return array("error-cause" => "incorrect event type");
-				}
-				$extProps = $extProps2->getPrivate();
-				if ($extProps['is_reserved'] == "true") {
-					$this->echo_error("This time is already reserved.");
-					return array("error-cause" => "selected reserved time");
-				}
-				else {
-					$extProps['is_reserved'] = "true";
-					$oldSummary = $oldEvent->getSummary();
-					$oldDescription = $oldEvent->getDescription();
-					
-					$oldEvent->setSummary("[RESERVED], " . $oldSummary);
-					$oldEvent->setDescription($oldDescription . "Reserved by $author_email.");
-					$extProps2->setPrivate(array_merge(array("student_email" => $author_email), $extProps));
-					$oldEvent->setExtendedProperties($extProps2);
-					$oldEvent->setAttendees($this->add_attendee($author_email, $oldEvent));
-
-					$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
-				}
-			}
-		}
-		else if ($events_arr['mode'] == "edit") {
+		// Handle tutor time-setting.
+		if ($events_arr['mode'] == "edit") {
 			foreach($events_arr['events'] as $event) {
 				// New event created.
 				if ($event['mode'] == "insert") {
@@ -177,7 +152,7 @@ class SynthCal {
 					$newEvent->setDescription("Tutor email: $author_email, tutor name: {$data['name']}.");
 					$newEvent->setStart($this->make_time($event['start']));
 					$newEvent->setEnd($this->make_time($event['end']));
-					$newEvent->setAttendees($this->add_attendee($author_email, null));
+					$newEvent->setAttendees($this->add_attendee($author_email, $newEvent));
 
 					$extendedProperties = new Google_Service_Calendar_EventExtendedProperties();
 					$extendedProperties->setPrivate(array (
