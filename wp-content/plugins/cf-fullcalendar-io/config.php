@@ -56,6 +56,13 @@
 	</div>
 </div>
 
+<div class="caldera-config-group">
+	<label for="{{_id}}_monthlyselecting">Enable adding/dragging events</label>
+	<div class="caldera-config-field">
+		<input type="checkbox" class="field-config {{_id}}_monthlyselecting" name="{{_name}}[monthlyselecting]" value="1" {{#if monthlyselecting}}checked="checked"{{/if}}>
+	</div>
+</div>
+
 <?php /*<div class="caldera-config-group">
 	<label>Input Option</label>
 	<div class="caldera-config-field">
