@@ -101,7 +101,7 @@ jQuery(document).ready(function() {
 	// configuration.
 	var isEditable = function() {
 		var isEdit = <?php echo getConfigAsBool('editable', $field); ?>;
-		console.log("Current value of isEdit is" + isEdit + "!"); // DEBUG
+		//console.log("Current value of isEdit is" + isEdit + "!"); // DEBUG
 		return isEdit;
 	}
 
