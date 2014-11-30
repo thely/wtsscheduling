@@ -117,17 +117,6 @@ class Reservation_Processor {
 	public function form_processor( $config, $form ) {
 		// globalised transient object - can be used for passing data between processor stages ( pre -> post etc.. )
 		global $transdata;
-		
-		/* Example $config content
-		$config = array(
-    		"processor_id" 		=>	'fp_87742436', 		// Auto asigned ID for the processor
-    		"first_option" 		=>	'Hello %name%',		// magic tag contained string
-    		"second_option" 	=>	'fld_7930752',		// direct bound field
-    		"_required_bounds"	=>	array(				// array of direct bound fields - this sets front form to be "Required" automatically
-            	"second_option" 						// slug of the required bound field
-        	)
-        );
-		*/
 
 		// Get config values.
 		$calendar_id = $config['calendar_id'];
@@ -175,17 +164,40 @@ class Reservation_Processor {
 			}
 		}
 
+		// Extract information relevant to email text formatting.
+		$event_info = array_map(function($event) {
+			$info = array();
+			$private_props = $event->getExtendedProperties()->getPrivate();
+			$info['tutor_name'] = $private_props['tutor_name'];
+			$info['tutor_email'] = $private_props['tutor_email'];
+			$info['start'] = new DateTime($event->getStart()->getDateTime());
+			$info['end'] = new DateTime($event->getEnd()->getDateTime());
+			return $info;
+		}, $cal_events);
+
+		$newline = "\r\n";
 		// Generate student email text.
+		$student_email_header = "The following " . (count($event_info) > 1 ? "events have" : "event has") ." been confirmed:";
+		$student_email_body = "";
+		foreach($event_info as $info) {
+			$time_diff = $info['start']->diff($info['end']);
+			// Calculate minutes assuming events don't last more than 24 hours.
+			$minutes = $time_diff->h * 60 + $time_diff->i;
+			$info_string = $info['start']->format("g:ia") . " - " .
+				$info['end']->format("g:ia l, F j, Y") . " (" . $minutes .
+				" minutes) with " . $info['tutor_name'] . "(" . $info['tutor_email'] . ")";
+			$student_email_body = $student_email_body . $newline . $info_string;
+		}
+		$student_email_footer = "";
 
 		// Generate tutor email text.
 
 		// This example will return the users input and the date in the defined tags
-		/*$return_meta = array(
-			'returned_tag'		=>	Caldera_Forms::do_magic_tags( $config['first_option'] ),
-			'another_returned'	=>	date('Y-m-d H:i:s')
+		$return_meta = array(
+			'student_email_output'		=>	$student_email_header . $student_email_body . $student_email_footer
 		);
 
-		return $return_meta;*/
+		return $return_meta;
 	}
 
 	private function add_attendee($email, &$event) {
