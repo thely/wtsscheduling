@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Caldera Forms - Reservation Processor
+ * Plugin Name: Caldera Forms - Cancellation Processor
  * Plugin URI:  
- * Description: Processor to handle incoming reservations made using fullcalendar field.
+ * Description: Processor to handle reservation cancellation.
  * Version:     1.0.0
  * Author:      Chris Hunt
  * Author URI:  
@@ -15,9 +15,9 @@
  * The core plugin class.
  *
  * @since      1.0.0
- * @package    Reservation_Processor
+ * @package    Cancellation_Processor
  */
-class Reservation_Processor {
+class Cancellation_Processor {
 
 	/**
 	 * The unique identifier of this plugin.
@@ -47,7 +47,7 @@ class Reservation_Processor {
 	 */
 	public function __construct() {
 
-		$this->plugin_slug = 'reservation_processor';
+		$this->plugin_slug = 'cancellation_processor';
 		$this->version = '1.0.0';
 
 		$this->set_locale();
@@ -84,9 +84,9 @@ class Reservation_Processor {
 		// Add our processor to the $processors array using our processor_slug as the key.
 		// It is possible to replace an existing processor by redefining it and hooking in with a lower priority i.e 100
 
-		$processors['reservation_processor'] 	= array(
-			"name"              =>  __("Reservation Processor", $this->plugin_slug),					// Required	 	: Processor name
-			"description"       =>  __("Processor to handle reservations", $this->plugin_slug),			// Required 	: Processor description
+		$processors['cancellation_processor'] 	= array(
+			"name"              =>  __("Cancellation Processor", $this->plugin_slug),					// Required	 	: Processor name
+			"description"       =>  __("Processor to handle reservation cancellation.", $this->plugin_slug),			// Required 	: Processor description
 			"icon"				=>	plugin_dir_url(__FILE__) . "assets/icon.png",				// Optional 	: Icon / Logo displayed in processors picker modal
 			"author"            =>  'Chris Hunt',											// Optional 	: Author name 
 			"processor"     	=>  array( $this, 'form_processor' ),							// Optional 	: Processor function used to handle data, cannot stop processing. Returned data saved as entry meta
@@ -94,15 +94,15 @@ class Reservation_Processor {
 			"meta_template"		=>  plugin_dir_path(__FILE__) . "includes/meta.php",			// Optional 	: template for displaying meta data returned from processor function 
 			"conditionals"		=>	true,														// Optional 	: default true  : setting false will disable conditionals for the processor (use always)
 			"single"			=>	false,														// Optional 	: default false : setting as true will only allow once per form
-			"magic_tags"    	=>  array(														// Optional 	: Array of values processor returns to be used in magic tag autocomplete list
-				"error",			// Boolean, true if there was an error in any of the reservations to be made/cancelled.
-				"student_email_output", // String, text to use in email confirmation to student
-				"tutor_email_output" // String, text to use in email confirmation to tutor
+			"magic_tags"	=>	array(
+				"tutor_email_output",	// String, email output for tutor.
+				"tutor_email",	// String, email address for tutor.
+				"tutor_name",	// String, name for tutor.
+				"confirmation_message"	// String, confirmation message for form response.
 			)
 		);
 
 		return $processors;
-
 	}
 
 	/**
@@ -118,21 +118,14 @@ class Reservation_Processor {
 		// globalised transient object - can be used for passing data between processor stages ( pre -> post etc.. )
 		global $transdata;
 
-		// Get config values.
-		$calendar_id = $config['calendar_id'];
-		$student_email = Caldera_forms::do_magic_tags($config['student_email']);
-		$student_name = Caldera_forms::do_magic_tags($config['student_name']);
-		$encoded_event_info = Caldera_forms::do_magic_tags($config['event_details']);
-		$site_url = Caldera_forms::do_magic_tags($config['site_url']);
-		$cancellation_path = Caldera_forms::do_magic_tags($config['cancellation_path']);
+		// Get additional form information.
+		$data = $this->form_debug_information($form);
 
-		// Get JSON information from calendar field.
-		$selected_event_details = json_decode(urldecode($encoded_event_info), true);
-		$event_mode = $selected_event_details['mode'];
-		$selected_events = $selected_event_details['events'];
-		$event_ids = array_map(function($event_info) {
-			return $event_info['id'];
-		}, $selected_events);
+		// Get config values.
+		$calendar_id = Caldera_forms::do_magic_tags($config['calendar_id']);
+		$event_ids_string = Caldera_forms::do_magic_tags($config['event_ids']);
+
+		$event_ids = explode("|", $event_ids_string);
 
 		// Set GCal information and require necessary files.
 		$service = $transdata['gcal_service'];
@@ -143,38 +136,56 @@ class Reservation_Processor {
 			return $service->events->get($calendar_id, $event_id);
 		}, $event_ids);
 
-		// Set events as reserved.
-		foreach($cal_events as $event) { 
+		// Get information for tutor email. Assumes all events will have
+		// the same information for student, student email, tutor, and tutor email.
+		$info_event = $cal_events[0];
+		$info_event_props = $info_event->getExtendedProperties()->getPrivate();
+		$tutor_email = $info_event_props['tutor_email'];
+		$tutor_name = $info_event_props['tutor_name'];
+		$student_name = $info_event_props['student_name'];
+		$student_email = $info_event_props['student_email'];
+
+		// Remove reservation from events.
+		foreach($cal_events as $event) {
 			$extended_properties = $event->getExtendedProperties();
 			if ($extended_properties == null) {
 				$this->echo_error("That event can't be selected.");
 				return array("error-cause" => "incorrect event type");
 			}
 			$private_props = $extended_properties->getPrivate();
-			if ($private_props['is_reserved'] == "true") {
-				$this->echo_error("This time is already reserved.");
-				return array("error-cause" => "selected reserved time");
+			if ($private_props['is_reserved'] == "false") {
+				$this->echo_error("This time is already cancelled.");
+				return array("error-cause" => "selected unreserved time");
 			}
 			else {
-				$private_props['is_reserved'] = "true";
-				$oldSummary = $event->getSummary();
-				$oldDescription = $event->getDescription();
-				$private_props['original_summary'] = $oldSummary;
-				$private_props['original_description'] = $oldDescription;
-				$private_props['student_email'] = $student_email;
-				$private_props['student_name'] = $student_name;
-				
-				$event->setSummary("[RESERVED], " . $oldSummary);
-				$event->setDescription($oldDescription . "Reserved by $student_email.");
-				$extended_properties->setPrivate(array_merge(array("student_email" => $student_email), $private_props));
+				// Get original summary/description.
+				if (isset($private_props['original_summary'])) {
+					$original_summary = $private_props['original_summary'];
+				} else {
+					$original_summary = "";
+				}
+				if (isset($private_props['original_description'])) {
+					$original_description = $private_props['original_description'];
+				} else {
+					$original_description = "";
+				}
+				$private_props['is_reserved'] = "false";
+				unset($private_props['original_summary']);
+				unset($private_props['original_description']);
+				unset($private_props['student_email']);
+				unset($private_props['student_name']);
+				$extended_properties->setPrivate($private_props);
 				$event->setExtendedProperties($extended_properties);
-				$event->setAttendees($this->add_attendee($student_email, $event));
+				
+				$event->setSummary($original_summary);
+				$event->setDescription($original_description);
+				$event->setAttendees($this->remove_attendee($student_email, $event));
 
-				$newEvent = $service->events->update($calendar_id, $event->getId(), $event);
+				$service->events->update($calendar_id, $event->getId(), $event);
 			}
 		}
 
-		// Extract information relevant to email text formatting.
+		// Extract information relevant to confirmation message and tutor email.
 		$event_info = array_map(function($event) {
 			$info = array();
 			$private_props = $event->getExtendedProperties()->getPrivate();
@@ -186,10 +197,26 @@ class Reservation_Processor {
 		}, $cal_events);
 
 		$newline = "\r\n";
-		// Generate student email text.
-		$student_email_header = "The following " . (count($event_info) > 1 ? "events have" : "event has") ." been confirmed:";
-		// Set event information.
-		$student_email_body = "";
+
+		// Create tutor email.
+		$tutor_email_header = "The following " . (count($event_info) > 1 ? "sessions have" : "session has") .
+		" been cancelled by " . $student_name . " (" . $student_email . "):";
+		$tutor_email_body = "";
+		foreach($event_info as $info) {
+			$time_diff = $info['start']->diff($info['end']);
+			// Calculate minutes assuming events don't last more than 24 hours.
+			$minutes = $time_diff->h * 60 + $time_diff->i;
+			$info_string = $info['start']->format("g:ia") . " - " .
+				$info['end']->format("g:ia l, F j, Y") . " (" . $minutes .
+				" minutes)";
+			$tutor_email_body = $tutor_email_body . $newline . $info_string;
+		}
+		$tutor_email_footer = "";
+
+		// Create confirmation message.
+		$confirmation_message_header = "The following " . (count($event_info) > 1 ? "sessions have" : "session has") .
+		" been cancelled:";
+		$confirmation_message_body = "";
 		foreach($event_info as $info) {
 			$time_diff = $info['start']->diff($info['end']);
 			// Calculate minutes assuming events don't last more than 24 hours.
@@ -197,34 +224,27 @@ class Reservation_Processor {
 			$info_string = $info['start']->format("g:ia") . " - " .
 				$info['end']->format("g:ia l, F j, Y") . " (" . $minutes .
 				" minutes) with " . $info['tutor_name'] . " (" . $info['tutor_email'] . ")";
-			$student_email_body = $student_email_body . $newline . $info_string;
+			$confirmation_message_body = $confirmation_message_body . $newline . $info_string;
 		}
-
-		// Set cancellation link.
-		$student_email_footer = "";
-		$event_ids_string = implode("|", $event_ids);
-		$student_email_footer = "To cancel this reservation, visit:".$newline.
-			$site_url."/".$cancellation_path."/?event=".$event_ids_string."&calendar=".$calendar_id;
-
-		// Generate tutor email text.
 
 		// This example will return the users input and the date in the defined tags
 		$return_meta = array(
-			'student_email_output'		=>	$student_email_header . $newline . $student_email_body . $newline . $student_email_footer
+			'tutor_email_output'		=>	$tutor_email_header . $newline . $tutor_email_body . $newline . $tutor_email_footer,
+			'tutor_email'		=>	$tutor_email,
+			'tutor_name'		=>	$tutor_name,
+			'confirmation_message' => $confirmation_message_header . $newline . $confirmation_message_body
 		);
 
 		return $return_meta;
+
 	}
 
-	private function add_attendee($email, &$event) {
-		$guest = new Google_Service_Calendar_EventAttendee();
-		$guest->setEmail($email);
-		if (isset($event)) {
-			return array_merge(array($guest), $event->getAttendees());
-		}
-		else {
-			return array($guest);
-		}
+	private function remove_attendee($email, &$event) {
+		$attendees = $event->getAttendees();
+		$new_attendees = array_filter($attendees, function($attendee) {
+			return $attendee->getEmail() != $email;
+		});
+		return $new_attendees;
 	}
 
 	private function make_time($time) {
@@ -234,13 +254,29 @@ class Reservation_Processor {
 		return $newTime;
 	}
 
+	private function form_debug_information($form) {
+		$data = array(); // build a data array of submitted data
+		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
+
+		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
+			if( in_array( $field_id, array( '_entry_id', '_entry_token' ) ) )
+				continue; // Ignores irrelevant debug fields.
+			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
+				continue; //ignores buttons
+
+			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = $field_value; // get the field slug for the key instead
+		}
+		return $data;
+	}
+
 	private function echo_error($text) {
 		echo "<pre style='border: 1px solid red; text-align: center;'>";
 		echo "Error: $text";
 		echo "</pre>";
 	}
+
 }
 
 // Create the instance. (can be done however you like)
-new Reservation_Processor();
+new Cancellation_Processor();
 ?>
