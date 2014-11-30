@@ -29,7 +29,8 @@ function pods_cf_capture_entry($config, $form){
 		}
 	}
 
-	if (array_key_exists('fld_5109852', $form['fields'])) {
+//	if (array_key_exists('fld_5109852', $form['fields'])) {
+	if (!empty($config['editable'])) {
 		$new_id = pods( $config['pod'] )->save( $entry, null, get_current_user_id()); 
 		return array( 'pod_id' => $new_id );
 	}
@@ -41,6 +42,7 @@ function pods_cf_capture_entry($config, $form){
 
 /**
  * PrePopulate options to bound fields
+ * Specifically, this loads the values of Pod-based fields in the non-admin view of the form.
  */
 function pods_cf_populate_options($field){
 	global $form;

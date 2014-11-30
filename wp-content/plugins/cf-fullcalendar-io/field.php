@@ -221,7 +221,8 @@ jQuery(document).ready(function() {
 		return false;
 	}
 
-	var renderingPreReqs = function(calEvent) {
+	//Helper function for eventRendering; makes sure all extProps keys exist.
+	var renderingPreReqsHelper = function(calEvent) {
 		if ("extendedProperties" in calEvent) { 
 			if ("private" in calEvent.extendedProperties) {
 				if ("is_reserved" in calEvent.extendedProperties['private']){
@@ -231,6 +232,14 @@ jQuery(document).ready(function() {
 		} else { return false; }
 	}
 
+	/*
+	 * Acts on events if their "is_reserved" extendedProperty is set to "true." 
+	 * For students, this hides the event entirely; for tutors, it makes the
+	 * event uneditable and changes the color scheme slightly.
+	 *
+	 * Note: this is where course-filtering and tutor-filtering will happen
+	 * when the time comes!
+	 */
 	var eventRenderHandler = function(calEvent, element) {
 		if (renderingPreReqs(calEvent)) {
 			if (calEvent.extendedProperties['private']['is_reserved'] === "true"){ 

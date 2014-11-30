@@ -18,8 +18,15 @@ $all_pods          = $pods_api->load_pods( array( 'names' => true ) );
 		</select>
 	</div>
 </div>
+<div class="caldera-config-group">
+	<label for="{{_id}}_editable">Edit existing pods</label>
+	<div class="caldera-config-field">
+		<input type="checkbox" class="field-config" name="{{_name}}[editable]" value="1" {{#if editable}}checked="checked"{{/if}}>
+	</div>
+</div>
 <div id="pods-binding-{{_id}}">
 </div>
+
 {{#script}}
 	{{#if object_fields}}
 	var config_{{_id}} = { {{pod}} : {
