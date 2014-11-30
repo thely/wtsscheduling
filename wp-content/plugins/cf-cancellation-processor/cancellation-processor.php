@@ -118,9 +118,6 @@ class Cancellation_Processor {
 		// globalised transient object - can be used for passing data between processor stages ( pre -> post etc.. )
 		global $transdata;
 
-		// Get additional form information.
-		$data = $this->form_debug_information($form);
-
 		// Get config values.
 		$calendar_id = Caldera_forms::do_magic_tags($config['calendar_id']);
 		$event_ids_string = Caldera_forms::do_magic_tags($config['event_ids']);
@@ -197,46 +194,54 @@ class Cancellation_Processor {
 		}, $cal_events);
 
 		$newline = "\r\n";
+		$html_newline = "<br>";
 
 		// Create tutor email.
 		$tutor_email_header = "The following " . (count($event_info) > 1 ? "sessions have" : "session has") .
 		" been cancelled by " . $student_name . " (" . $student_email . "):";
-		$tutor_email_body = "";
-		foreach($event_info as $info) {
+		
+		$tutor_email_event_list = array_map(function($info) {
 			$time_diff = $info['start']->diff($info['end']);
 			// Calculate minutes assuming events don't last more than 24 hours.
 			$minutes = $time_diff->h * 60 + $time_diff->i;
 			$info_string = $info['start']->format("g:ia") . " - " .
 				$info['end']->format("g:ia l, F j, Y") . " (" . $minutes .
 				" minutes)";
-			$tutor_email_body = $tutor_email_body . $newline . $info_string;
-		}
-		$tutor_email_footer = "";
+			return $info_string;
+		}, $event_info);
+		$tutor_email_body = implode($newline, $tutor_email_event_list);
+		$tutor_email_output = implode($newline, array(
+			$tutor_email_header,
+			$tutor_email_body
+		));
 
 		// Create confirmation message.
 		$confirmation_message_header = "The following " . (count($event_info) > 1 ? "sessions have" : "session has") .
 		" been cancelled:";
-		$confirmation_message_body = "";
-		foreach($event_info as $info) {
+		$confirmation_message_event_list = array_map(function($info) {
 			$time_diff = $info['start']->diff($info['end']);
 			// Calculate minutes assuming events don't last more than 24 hours.
 			$minutes = $time_diff->h * 60 + $time_diff->i;
 			$info_string = $info['start']->format("g:ia") . " - " .
 				$info['end']->format("g:ia l, F j, Y") . " (" . $minutes .
 				" minutes) with " . $info['tutor_name'] . " (" . $info['tutor_email'] . ")";
-			$confirmation_message_body = $confirmation_message_body . $newline . $info_string;
-		}
+			return $info_string;
+		}, $event_info);
+		$confirmation_message_body = implode($html_newline, $confirmation_message_event_list);
+		$confirmation_message_output = implode($html_newline, array(
+			$confirmation_message_header,
+			$confirmation_message_body
+		));
 
 		// This example will return the users input and the date in the defined tags
 		$return_meta = array(
-			'tutor_email_output'		=>	$tutor_email_header . $newline . $tutor_email_body . $newline . $tutor_email_footer,
+			'tutor_email_output'		=>	$tutor_email_output,
 			'tutor_email'		=>	$tutor_email,
 			'tutor_name'		=>	$tutor_name,
-			'confirmation_message' => $confirmation_message_header . $newline . $confirmation_message_body
+			'confirmation_message' => $confirmation_message_output
 		);
 
 		return $return_meta;
-
 	}
 
 	private function remove_attendee($email, &$event) {
@@ -252,21 +257,6 @@ class Cancellation_Processor {
 		$newTime->setDateTime($time);
 		$newTime->setTimeZone("America/New_York");
 		return $newTime;
-	}
-
-	private function form_debug_information($form) {
-		$data = array(); // build a data array of submitted data
-		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
-
-		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
-			if( in_array( $field_id, array( '_entry_id', '_entry_token' ) ) )
-				continue; // Ignores irrelevant debug fields.
-			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
-				continue; //ignores buttons
-
-			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = $field_value; // get the field slug for the key instead
-		}
-		return $data;
 	}
 
 	private function echo_error($text) {
