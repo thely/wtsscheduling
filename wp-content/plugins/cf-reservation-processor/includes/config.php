@@ -21,22 +21,31 @@
  * .caldera-config-field	: field inner wrapper for styling
  * .required				: class name to specify the field is required
  *
- *<label for="{{_id}}_api_key">API Key</label>
- *	<div class="caldera-config-field">
- *		<input type="text" id="{{_id}}_api_key" class="block-input field-config magic-tag-enabled required" name="{{_name}}[api_key]" value="{{api_key}}">
+ *
+ *
+ * @since      1.0.0
+ * @package    Reservation_Processor
  */
+
 ?>
 <div class="caldera-config-group">
-	<label for="{{_id}}_service_account_name">Service Account Name</label>
+	<label for="{{_id}}_event_details"><?php _e('Event Details', 'reservation_processor'); ?></label>
 	<div class="caldera-config-field">
-		<input type="text" id="{{_id}}_service_account" class="block-input field-config magic-tag-enabled required" name="{{_name}}[service_account]" value="{{service_account}}">
-		<p>Required. Email for the service account</p>
+		<input type="text" id="{{_id}}_event_details" class="block-input field-config magic-tag-enabled required" name="{{_name}}[event_details]" value="{{event_details}}">
+		<p>Required. Tag corresponding to calendar field output.</p>
 	</div>
 </div>
 <div class="caldera-config-group">
-	<label for="{{_id}}_key_file_location">Key file</label>
-	<div class="caldera-config-field">
-		<input type="text" id="{{_id}}_key_file_location" class="block-input field-config magic-tag-enabled required" name="{{_name}}[key_file_location]" value="{{key_file_location}}">
-		<p>Required. Location of the private key file</p>
-	</div>
+  <label for="{{_id}}_calendar_id">Calendar ID</label>
+  <div class="caldera-config-field">
+    <input type="text" id="{{_id}}_calendar_id" class="block-input field-config magic-tag-enabled required" name="{{_name}}[calendar_id]" value="{{calendar_id}}">
+    <p>Required. This must be set to the Calendar ID.</p>
+  </div>
+</div>
+<div class="caldera-config-group">
+  <label for="{{_id}}_student_email">Student email</label>
+  <div class="caldera-config-field">
+    <input type="text" id="{{_id}}_student_email" class="block-input field-config magic-tag-enabled" name="{{_name}}[student_email]" value="{{student_email}}">
+    <p>Required. Email for student making reservation.</p>
+  </div>
 </div>

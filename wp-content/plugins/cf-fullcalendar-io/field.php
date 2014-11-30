@@ -6,6 +6,17 @@
 	<?php echo $field_caption; ?>
 <?php echo $field_after; ?>
 <?php echo $wrapper_after; ?>
+<?php
+if (!function_exists('getConfigAsBool')) {
+	// Takes a key and returns "true" if the key is present in $config and
+	// has a truthy value, "false" otherwise.
+	function getConfigAsBool($key, $field)
+	{
+		return (array_key_exists($key, $field['config']) &&
+			  	$field['config'][$key]) ? "true" : "false";
+	}
+}
+?>
 
 <div id="event-dialog-<?php echo $field_id; ?>" title="Edit Event">
   <p class="validateTips">All form fields are required.</p>
@@ -89,25 +100,23 @@ jQuery(document).ready(function() {
 	// Return true if calendar events should be editable, per form
 	// configuration.
 	var isEditable = function() {
-		var isEdit = "<?php echo $field['config']['editable']?>";
-		var isEditStr = isEdit ? "true" : "false"; // DEBUG
-		console.log("Current value of isEdit is" + isEditStr + "!"); // DEBUG
-		return isEdit ? true : false;
+		var isEdit = <?php echo getConfigAsBool('editable', $field); ?>;
+		console.log("Current value of isEdit is" + isEdit + "!"); // DEBUG
+		return isEdit;
 	}
 
 	// Return true if calendar events should be editable, per form
 	// configuration.
 	var isEditableInMonthlyView = function() {
-		var isEdit = "<?php echo $field['config']['monthlyselecting']?>";
-		var isEditStr = isEdit ? "true" : "false"; // DEBUG
-		console.log("Current value of isEdit is" + isEditStr + "!"); // DEBUG
-		return isEdit ? true : false;
+		var isEdit = <?php echo getConfigAsBool('monthlyselecting', $field); ?>;
+		console.log("Current value of isEdit is" + isEdit + "!"); // DEBUG
+		return isEdit;
 	}
 
 	var fcMakeView = function() {
-		var weekly = "<?php echo $field['config']['weekly']; ?>";
-		var monthly = "<?php echo $field['config']['monthly']; ?>";
-		var daily = "<?php echo $field['config']['daily']; ?>";
+		var weekly = <?php echo getConfigAsBool('weekly', $field); ?>;
+		var monthly = <?php echo getConfigAsBool('monthly', $field); ?>;
+		var daily = <?php echo getConfigAsBool('daily', $field); ?>;
 
 		var views = [];
 		if (monthly) { views[0] = "month"; }
@@ -256,6 +265,8 @@ jQuery(document).ready(function() {
 				}
 			}
 		}
+	}
+	
 	/*
 	 * Handle selection of empty time slot/day. If the time slot clicked
 	 * was in weekly or daily view, start and end will correspond to the

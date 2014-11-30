@@ -123,8 +123,11 @@ class DebugProcessor {
 		//echo "Raw Data\r\n";
 		//print_r( $raw_data );
 	 
-		echo "\r\nClean Data\r\n";
+		echo "\r\nClean Form Data\r\n";
 		print_r( $data );
+		
+		echo "\r\nClean Trans Data\r\n";
+		print_r( $transdata );
 		
 		/*foreach ($results as $item) {
   			echo $item['summary'], ", [", $item['id'], "], ", $item['description'], "<br /> \n";
@@ -137,9 +140,9 @@ class DebugProcessor {
 		/*$return_meta = array(
 			'api_key'		=>	Caldera_Forms::do_magic_tags( $config['api_key'] ),
 			'current_date'	=>	date('Y-m-d H:i:s')
-		);
+		);*/
 
-		return $return_meta;*/
+		return $return_meta;
 	}
 }
 
