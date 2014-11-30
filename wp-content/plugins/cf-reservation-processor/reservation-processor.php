@@ -135,7 +135,7 @@ class Reservation_Processor {
 		$selected_events = $selected_event_details['events'];
 		$event_ids = array_map(function($event_info) {
 			return $event_info['id'];
-		}, $selected_events);
+		}, array_values($selected_events));
 
 		// Set GCal information and require necessary files.
 		$service = $transdata['gcal_service'];
