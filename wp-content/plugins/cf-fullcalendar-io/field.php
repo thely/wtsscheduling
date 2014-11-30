@@ -250,7 +250,7 @@ jQuery(document).ready(function() {
 	 * when the time comes!
 	 */
 	var eventRenderHandler = function(calEvent, element) {
-		if (renderingPreReqs(calEvent)) {
+		if (renderingPreReqsHelper(calEvent)) {
 			if (calEvent.extendedProperties['private']['is_reserved'] === "true"){ 
 				if (!isEditable()) { //hide reserved times from the student
 					return false; 
