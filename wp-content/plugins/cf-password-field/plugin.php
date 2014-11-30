@@ -8,7 +8,7 @@
 
 // Add field type config to caldera forms fields
 // use a function name that is unique of if whithin a class, array($this, 'method_to_use')
-add_filter('caldera_forms_get_field_types', 'my_custom_field_register_function');
+add_filter('caldera_forms_get_field_types', 'password_field_register_function');
 
 /**
  * field type register function to add new field to registered fields array
@@ -16,7 +16,7 @@ add_filter('caldera_forms_get_field_types', 'my_custom_field_register_function')
  * @param array $fields all registered field types with key as field type slug
  * @return array $fields
  */
-function my_custom_field_register_function($fields){
+function password_field_register_function($fields){
 
 	//be sure to give you field a unique slug. you are also able to redefine exisitng field by simply redefining it.
 	// the only REQUIRED values are name, file, category, description
