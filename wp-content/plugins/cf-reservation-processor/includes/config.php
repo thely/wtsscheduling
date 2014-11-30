@@ -43,6 +43,27 @@
   </div>
 </div>
 <div class="caldera-config-group">
+  <label for="{{_id}}_site_url">Site URL</label>
+  <div class="caldera-config-field">
+    <input type="text" id="{{_id}}_site_url" class="block-input field-config magic-tag-enabled required" name="{{_name}}[site_url]" value="{{site_url}}">
+    <p>Required. This must be set to base URL for the Wordpress install (no trailing slash, e.g. http://localhost/wordpress).</p>
+  </div>
+</div>
+<div class="caldera-config-group">
+  <label for="{{_id}}_cancellation_path">Cancellation Path</label>
+  <div class="caldera-config-field">
+    <input type="text" id="{{_id}}_cancellation_path" class="block-input field-config magic-tag-enabled required" name="{{_name}}[cancellation_path]" value="{{cancellation_path}}">
+    <p>Required. This must be set to path of the cancellation form, relative to the base URL set above (no leading or trailing slash, e.g. reservation-cancellation).</p>
+  </div>
+</div>
+<div class="caldera-config-group">
+  <label for="{{_id}}_student_name">Student name</label>
+  <div class="caldera-config-field">
+    <input type="text" id="{{_id}}_student_name" class="block-input field-config magic-tag-enabled" name="{{_name}}[student_name]" value="{{student_name}}">
+    <p>Required. Email for student making reservation.</p>
+  </div>
+</div>
+<div class="caldera-config-group">
   <label for="{{_id}}_student_email">Student email</label>
   <div class="caldera-config-field">
     <input type="text" id="{{_id}}_student_email" class="block-input field-config magic-tag-enabled" name="{{_name}}[student_email]" value="{{student_email}}">
