@@ -29,6 +29,9 @@
 			"id" => $mypod->field($id_field), 
 			"name" => $mypod->field($name_field)
 		);
+		if ($whichpod == "user") {
+			$nextpod['calendar_id'] = $mypod->field("calendar_id");
+		}
 		array_push($filtered_pods, $nextpod);
 	}
 	print json_encode($filtered_pods);

@@ -6,6 +6,8 @@
 	<?php echo $field_caption; ?>
 <?php echo $field_after; ?>
 <?php echo $wrapper_after; ?>
+<?php 
+	$new_email = Caldera_forms::do_magic_tags($field['config']['new_email']); ?>
 <?php
 if (!function_exists('getConfigAsBool')) {
 	// Takes a key and returns "true" if the key is present in $config and
@@ -321,14 +323,65 @@ jQuery(document).ready(function() {
 		console.log("Test day click!");
 	}
 
+	var getFixedCalendarId = function(apiKey) {
+		var mydir = "<?php echo plugin_dir_url(__FILE__); ?>" + "fc_cal_ids.php";
+		var gcalId = "";
+		jQuery.ajax({
+			url: mydir, 
+			type: "get",
+			dataType: "html",
+			async: false,
+			success: function(data){
+				gcalId = data;
+			}
+		});
+		return [gcalId];
+	}
+
+	var getVariableCalendarIds = function() {
+		var eventSources = [];
+		var source = "#<?php echo $new_email; ?>_1";
+		var calendarIds = JSON.parse(decodeURI(jQuery(source).val()));
+		console.log("This is a new thing " + calendarIds);
+		for (id in calendarIds) {
+			if (calendarIds[id]['calendar_id'] != "") {
+				eventSources.push(calendarIds[id]['calendar_id']);
+			}
+		}
+		return eventSources;
+	}
+
+	var setCalendarIds = function(toggle) {
+		var apiKey = "<?php echo $field['config']['api_key']; ?>";
+		var eventSources = [];
+		if (isEditable()) { //getting single calendar for tutor
+			eventSources = getFixedCalendarId();
+		}
+		else { //getting any number of possible calendars for students
+			eventSources = getVariableCalendarIds();
+		}
+		jQuery.each(eventSources, function(key, val){
+			jQuery(CAL_DIV).fullCalendar('addEventSource', { 
+				"googleCalendarId": val,
+				"googleCalendarApiKey": apiKey
+			});
+		});
+		jQuery(CAL_DIV).fullCalendar('refetchEvents');
+	}
+	jQuery(document).ready(function() {
+		if (isEditable()) {
+			setCalendarIds();
+		}
+		else {
+			jQuery("#<?php echo $new_email; ?>_1").change(setCalendarIds);
+		}
+	});
+
 	// Create FullCalendar element.
 	jQuery(CAL_DIV).fullCalendar({
 		//Event sources
-		googleCalendarApiKey: "<?php echo $field['config']['api_key']; ?>",
-		events: {
-			googleCalendarId: "<?php echo Caldera_forms::do_magic_tags($field['config']['cal_id']); ?>",
-			className: 'test_events',
-		},
+		//googleCalendarApiKey: "<?php echo $field['config']['api_key']; ?>",
+		eventSources: [],
 		//View generation
 		header: {
 			left: "prev,next today",

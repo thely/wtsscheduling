@@ -25,6 +25,13 @@
 	<label for="{{_id}}_cal_id">Calendar ID</label>
 	<div class="caldera-config-field">
 		<input type="text" id="{{_id}}_cal_id" class="block-input field-config magic-tag-enabled required" name="{{_name}}[cal_id]" value="{{cal_id}}">
+		<?php /*{{{_field slug="cal_id" exclude="system"}}}		*/ ?>
+	</div>
+</div>
+<div class="caldera-config-group">
+	<label>New email field?</label>
+	<div class="caldera-config-field">
+		{{{_field slug="new_email"}}}
 	</div>
 </div>
 
@@ -57,7 +64,7 @@
 </div>
 
 <div class="caldera-config-group">
-	<label for="{{_id}}_monthlyselecting">Enable adding/dragging events</label>
+	<label for="{{_id}}_monthlyselecting">Enable monthly selecting</label>
 	<div class="caldera-config-field">
 		<input type="checkbox" class="field-config {{_id}}_monthlyselecting" name="{{_name}}[monthlyselecting]" value="1" {{#if monthlyselecting}}checked="checked"{{/if}}>
 	</div>
