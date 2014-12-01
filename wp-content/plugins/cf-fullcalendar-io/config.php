@@ -29,7 +29,7 @@
 	</div>
 </div>
 <div class="caldera-config-group">
-	<label>New email field?</label>
+	<label>Calendar ID (new)</label>
 	<div class="caldera-config-field">
 		{{{_field slug="new_email"}}}
 	</div>

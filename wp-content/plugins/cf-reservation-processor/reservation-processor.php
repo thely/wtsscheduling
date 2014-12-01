@@ -122,7 +122,6 @@ class Reservation_Processor {
 		global $transdata;
 
 		// Get config values.
-		$calendar_id = $config['calendar_id'];
 		$student_email = Caldera_forms::do_magic_tags($config['student_email']);
 		$student_name = Caldera_forms::do_magic_tags($config['student_name']);
 		$encoded_event_info = Caldera_forms::do_magic_tags($config['event_details']);
@@ -131,7 +130,9 @@ class Reservation_Processor {
 
 		// Get JSON information from calendar field.
 		$selected_event_details = json_decode(urldecode($encoded_event_info), true);
+		$calendar_id = $selected_event_details['calendar_id'];
 		$event_mode = $selected_event_details['mode'];
+
 		$selected_events = $selected_event_details['events'];
 		$event_ids = array_map(function($event_info) {
 			return $event_info['id'];

@@ -68,8 +68,10 @@ jQuery(document).ready(function() {
 			// Set mode for synth-cal processor.
 			calChanges['mode'] = "select";
 			calChanges['events'][newEvent['id']] = newEvent;
+			calChanges['calendar_id'] = calChanges['events'][newEvent['id']]['source'];
 		}
 		else {
+			calChanges['calendar_id'] = getFixedCalendarId();
 			// Set mode for synth-cal processor.
 			calChanges['mode'] = "edit";
 			if (newEvent['mode'] == "update") {
@@ -96,6 +98,7 @@ jQuery(document).ready(function() {
 				}
 			}
 		}
+		console.log(JSON.stringify(calChanges));
 		updateFieldValue();
 	}
 
@@ -216,8 +219,10 @@ jQuery(document).ready(function() {
 			id = id.replace("@google.com", "");
 			var eventData = {
 				mode: "select",
-				id: id
+				id: id,
+				source: calEvent.source.googleCalendarId
 			};
+			console.log("eventData looks like " + JSON.stringify(eventData));
 			updateCalChanges(eventData);
 		} else {
 			// Provide additional editing options.
@@ -323,7 +328,7 @@ jQuery(document).ready(function() {
 		console.log("Test day click!");
 	}
 
-	var getFixedCalendarId = function(apiKey) {
+	var getFixedCalendarId = function() {
 		var mydir = "<?php echo plugin_dir_url(__FILE__); ?>" + "fc_cal_ids.php";
 		var gcalId = "";
 		jQuery.ajax({
@@ -335,12 +340,16 @@ jQuery(document).ready(function() {
 				gcalId = data;
 			}
 		});
-		return [gcalId];
+		return gcalId;
 	}
 
 	var getVariableCalendarIds = function() {
 		var eventSources = [];
 		var source = "#<?php echo $new_email; ?>_1";
+		var data = jQuery(source).val();
+		if (data == "" || data == null || data == false) {
+			return eventSources;
+		}
 		var calendarIds = JSON.parse(decodeURI(jQuery(source).val()));
 		console.log("This is a new thing " + calendarIds);
 		for (id in calendarIds) {
@@ -351,15 +360,17 @@ jQuery(document).ready(function() {
 		return eventSources;
 	}
 
-	var setCalendarIds = function(toggle) {
+	var setCalendarIds = function() {
+		console.log("Hello big function friend");
 		var apiKey = "<?php echo $field['config']['api_key']; ?>";
 		var eventSources = [];
 		if (isEditable()) { //getting single calendar for tutor
-			eventSources = getFixedCalendarId();
+			eventSources = [getFixedCalendarId()];
 		}
 		else { //getting any number of possible calendars for students
 			eventSources = getVariableCalendarIds();
 		}
+		console.log("Sources looks like: " + JSON.stringify(eventSources));
 		jQuery.each(eventSources, function(key, val){
 			jQuery(CAL_DIV).fullCalendar('addEventSource', { 
 				"googleCalendarId": val,
@@ -381,7 +392,7 @@ jQuery(document).ready(function() {
 	jQuery(CAL_DIV).fullCalendar({
 		//Event sources
 		//googleCalendarApiKey: "<?php echo $field['config']['api_key']; ?>",
-		eventSources: [],
+		//eventSources: [],
 		//View generation
 		header: {
 			left: "prev,next today",

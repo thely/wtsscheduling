@@ -29,8 +29,17 @@ function pods_cf_capture_entry($config, $form){
 		}
 	}
 
-//	if (array_key_exists('fld_5109852', $form['fields'])) {
 	if (!empty($config['editable'])) {
+		if ($config['pod'] == 'user') {
+			$user_id = get_current_user_id();
+			$params = array('where' => "id = '$user_id'");
+			$mypod = pods('user', $params);
+			while ($mypod->fetch()) {
+				$entry['calendar_id'] = $mypod->field('calendar_id');
+			}
+		}
+
+
 		$new_id = pods( $config['pod'] )->save( $entry, null, get_current_user_id()); 
 		return array( 'pod_id' => $new_id );
 	}
@@ -83,7 +92,6 @@ function pods_cf_populate_options($field){
 					);
 				}
 			}
-
 		}
 	}
 

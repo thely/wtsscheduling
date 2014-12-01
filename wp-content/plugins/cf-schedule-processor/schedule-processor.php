@@ -116,13 +116,13 @@ class Schedule_Processor {
 		$data = $this->form_debug_information($form);
 
 		// Get config values.
-		$calendar_id = $config['calendar_id'];
 		$tutor_email = Caldera_forms::do_magic_tags($config['tutor_email']);
 		$encoded_event_info = Caldera_forms::do_magic_tags($config['event_details']);
 
 		// Get JSON information from calendar field.
 		$event_details = json_decode(urldecode($encoded_event_info), true);
 		$edited_events = $event_details['events'];
+		$calendar_id = $event_details['calendar_id'];
 
 		// Set GCal information and require necessary files.
 		$service = $transdata['gcal_service'];

@@ -121,6 +121,7 @@ class Cancellation_Processor {
 		// Get config values.
 		$calendar_id = Caldera_forms::do_magic_tags($config['calendar_id']);
 		$event_ids_string = Caldera_forms::do_magic_tags($config['event_ids']);
+		//$calendar_id = $event_ids_string['calendar_id'];
 
 		$event_ids = explode("|", $event_ids_string);
 
