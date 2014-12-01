@@ -97,7 +97,10 @@ class Reservation_Processor {
 			"magic_tags"    	=>  array(														// Optional 	: Array of values processor returns to be used in magic tag autocomplete list
 				"error",			// Boolean, true if there was an error in any of the reservations to be made/cancelled.
 				"student_email_output", // String, text to use in email confirmation to student
-				"tutor_email_output" // String, text to use in email confirmation to tutor
+				"tutor_email_output", // String, text to use in email confirmation to tutor
+				"tutor_email",	// String, email for tutor related to reserved event
+				"tutor_name",	// String, name of tutor related to reserved event
+				"confirmation_message"	// String, confirmation message to be displayed.
 			)
 		);
 
@@ -132,7 +135,7 @@ class Reservation_Processor {
 		$selected_events = $selected_event_details['events'];
 		$event_ids = array_map(function($event_info) {
 			return $event_info['id'];
-		}, $selected_events);
+		}, array_values($selected_events));
 
 		// Set GCal information and require necessary files.
 		$service = $transdata['gcal_service'];
@@ -174,7 +177,8 @@ class Reservation_Processor {
 			}
 		}
 
-		// Extract information relevant to email text formatting.
+		/* EMAIL AND CONFIRMATION TEXT FORMATTING */
+
 		$event_info = array_map(function($event) {
 			$info = array();
 			$private_props = $event->getExtendedProperties()->getPrivate();
@@ -184,33 +188,84 @@ class Reservation_Processor {
 			$info['end'] = new DateTime($event->getEnd()->getDateTime());
 			return $info;
 		}, $cal_events);
-
+		
+		$info_event_props = $event_info[0];
+		// Assumes the same tutor and tutor email for all events.
+		$tutor_email = $info_event_props['tutor_email'];//
+		$tutor_name = $info_event_props['tutor_name'];
+		
 		$newline = "\r\n";
+		$html_newline = "<br>";
+
 		// Generate student email text.
-		$student_email_header = "The following " . (count($event_info) > 1 ? "events have" : "event has") ." been confirmed:";
-		// Set event information.
-		$student_email_body = "";
-		foreach($event_info as $info) {
+		$student_email_header = "The following " .
+			(count($event_info) > 1 ? "sessions have" : "session has") .
+			" been confirmed:";
+		$student_email_event_list = array_map(function($info) {
 			$time_diff = $info['start']->diff($info['end']);
 			// Calculate minutes assuming events don't last more than 24 hours.
 			$minutes = $time_diff->h * 60 + $time_diff->i;
 			$info_string = $info['start']->format("g:ia") . " - " .
 				$info['end']->format("g:ia l, F j, Y") . " (" . $minutes .
-				" minutes) with " . $info['tutor_name'] . " (" . $info['tutor_email'] . ")";
-			$student_email_body = $student_email_body . $newline . $info_string;
-		}
-
+				" minutes) with " . $info['tutor_name'] . " (" .
+				$info['tutor_email'] . ")";
+			return $info_string;
+		}, $event_info);
+		$student_email_body = implode($newline, $student_email_event_list);
 		// Set cancellation link.
-		$student_email_footer = "";
 		$event_ids_string = implode("|", $event_ids);
-		$student_email_footer = "To cancel this reservation, visit:".$newline.
-			$site_url."/".$cancellation_path."/?event=".$event_ids_string."&calendar=".$calendar_id;
+		$cancellation_link = $site_url . "/" . $cancellation_path .
+			"/?event=" . $event_ids_string . "&calendar=" . $calendar_id;
+		$student_email_footer = "To cancel this reservation, visit:" .
+			$newline . $cancellation_link;
+		$student_email_output = implode($newline, array(
+			$student_email_header,
+			$student_email_body,
+			$student_email_footer
+		));
 
 		// Generate tutor email text.
+		$tutor_email_header = "The following " .
+			(count($event_info) > 1 ? "sessions have" : "session has") .
+			" been reserved by " . $student_name . " (" . $student_email . "):";
+		$tutor_email_event_list = array_map(function($info) {
+			$time_diff = $info['start']->diff($info['end']);
+			// Calculate minutes assuming events don't last more than 24 hours.
+			$minutes = $time_diff->h * 60 + $time_diff->i;
+			$info_string = $info['start']->format("g:ia") . " - " .
+				$info['end']->format("g:ia l, F j, Y") . " (" . $minutes .
+				" minutes)";
+			return $info_string;
+		}, $event_info);
+		$tutor_email_body = implode($newline, $tutor_email_event_list);
+		$tutor_email_output = implode($newline, array(
+			$tutor_email_header,
+			$tutor_email_body
+		));
+
+		// Create confirmation message.
+		$confirmation_message_header = "The following " .
+			(count($event_info) > 1 ? "sessions have" : "session has") .
+			" been reserved:";
+		$confirmation_message_body = implode($html_newline, $student_email_event_list);
+		$confirmation_message_footer = "You may cancel your reservation here: " .
+			$html_newline . "<a href=\"" . $cancellation_link . "\">" .
+			$cancellation_link . "</a>" . $html_newline .
+			"You should be receiving an email shortly at " . $student_email .
+			" with this information.";
+		$confirmation_message_output = implode($html_newline, array(
+			$confirmation_message_header,
+			$confirmation_message_body,
+			$confirmation_message_footer
+		));
 
 		// This example will return the users input and the date in the defined tags
 		$return_meta = array(
-			'student_email_output'		=>	$student_email_header . $newline . $student_email_body . $newline . $student_email_footer
+			'student_email_output'		=>	$student_email_output,
+			'tutor_email_output'		=>	$tutor_email_output,
+			'tutor_email'		=>	$tutor_email,
+			'tutor_name'		=>	$tutor_name,
+			'confirmation_message'	=>	$confirmation_message_output
 		);
 
 		return $return_meta;

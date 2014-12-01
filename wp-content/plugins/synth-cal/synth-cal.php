@@ -14,6 +14,7 @@ function register_my_session() {
 }
 
 add_action('init', 'register_my_session');
+
 define('SYNTH_URL', plugin_dir_path(__FILE__));
 define('GOOGLE_API_URL', SYNTH_URL . 'google-api/autoload.php');
 require_once(GOOGLE_API_URL); 
@@ -40,8 +41,7 @@ class SynthCal {
 		$this->set_locale();
 
 		// Add filter to regester the form processor
-		add_filter( 'caldera_forms_get_form_processors', array( $this, 'synthcal_processor_register') );
-
+		add_filter('caldera_forms_get_form_processors', array($this, 'synthcal_processor_register'));
 	}
 
 	private function set_locale() {
@@ -72,7 +72,7 @@ class SynthCal {
 			"processor"     	=>  array( $this, 'synthcal_form_processor' ),							// Optional 	: Processor function used to handle data, cannot stop processing. Returned data saved as entry meta
 			"template"          =>  plugin_dir_path(__FILE__) . "includes/config.php",			// Optional 	: Config template for setting up the processor in form builder
 			"conditionals"		=>	true,														// Optional 	: default true  : setting false will disable conditionals for the processor (use always)
-			"single"			=>	false														// Optional 	: default false : setting as true will only allow once per form
+			"single"			=>	false,														// Optional 	: default false : setting as true will only allow once per form
 		);
 
 		return $processors;
@@ -94,12 +94,13 @@ class SynthCal {
 		// Google Calendar connection information, populated by
 		// processor configuration set in form.
 		$service_account_name = $config['service_account'];
-		$key_file_location = $config['key_file_location'];
-
+		$encoded_key_file_contents = substr($config['key_file_contents'],
+			strpos($config['key_file_contents'], ","));
+		$key_file_contents = base64_decode($encoded_key_file_contents);
 		//Briefer service config - mostly in a function now		
 		$client = new Google_Client();
 		$client->setApplicationName("wtsscheduler");
-		$service = $this->start_service($client, $service_account_name, $key_file_location);
+		$service = $this->start_service($client, $service_account_name, $key_file_contents);
 
 		// Make service available for other processors.
 		$transdata['gcal_service'] = $service;
@@ -109,18 +110,17 @@ class SynthCal {
 		return $return_meta;
 	}
 
-	private function start_service(&$client, $service_account_name, $key_file_location) {
+	private function start_service(&$client, $service_account_name, $key_file_contents) {
 		$service = new Google_Service_Calendar($client);
 
 		if (isset($_SESSION['service_token'])) {
 			$client->setAccessToken($_SESSION['service_token']);
 		}
-		$key = file_get_contents(SYNTH_URL . $key_file_location);
 		$cred = new Google_Auth_AssertionCredentials(
 	    	$service_account_name,
 		    array('https://www.googleapis.com/auth/calendar',
 	   	  		'https://www.googleapis.com/auth/calendar.readonly'),
-		    $key
+		    $key_file_contents
 		);
 
 		$client->setAssertionCredentials($cred);
