@@ -89,9 +89,8 @@ class SynthCal {
 	 * @return   array				optional			Array data returned is magic_tag translateble and appended to entry as meta data
 	 */
 	public function synthcal_form_processor( $config, $form ) {
-
 		global $transdata; // globalised transient object - can be used for passing data between processor stages ( pre -> post etc.. )
-		
+
 		// Google Calendar connection information, populated by
 		// processor configuration set in form.
 		$service_account_name = $config['service_account'];
@@ -105,6 +104,9 @@ class SynthCal {
 		// Make service available for other processors.
 		$transdata['gcal_service'] = $service;
 		$transdata['gcal_require'] = GOOGLE_API_URL;
+
+		$return_meta = array( "thing" => "other_thing");
+		return $return_meta;
 	}
 
 	private function start_service(&$client, $service_account_name, $key_file_location) {
