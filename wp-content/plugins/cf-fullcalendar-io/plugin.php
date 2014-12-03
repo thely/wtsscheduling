@@ -113,7 +113,7 @@ function register_fullcal_scripts () {
 	wp_enqueue_style("fc-jquery-ui-timepicker-css", plugins_url("lib/jquery-ui-timepicker-addon.css", __FILE__), array(), time(), 'all');
 	wp_register_script("fc-custom-ui", plugins_url("js/lib/jquery-ui.min.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-moment-jq", plugins_url("js/lib/moment.min.js", __FILE__), array('jquery'), time(), false);
-	wp_register_script("fc-fullcal", plugins_url("js/fullcalendar.min.js", __FILE__), array('jquery'), time(), false);
+	wp_register_script("fc-fullcal", plugins_url("js/fullcalendar.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-gcal", plugins_url("js/gcal.js", __FILE__), array('jquery'), time(), false);
 	wp_register_script("fc-jquery-ui-timepicker", plugins_url("lib/jquery-ui-timepicker-addon.js", __FILE__), array('jquery', 'fc-custom-ui'), time(), false);
 

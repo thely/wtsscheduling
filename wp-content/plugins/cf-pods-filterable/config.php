@@ -35,15 +35,29 @@ $all_pods          = pods_api()->load_pods( array( 'names' => true ) );
 </div>
 
 <div class="caldera-config-group">
-	<label>Custom class of the field to filter from</label>
+	<label>Field to filter from</label>
 	<div class="caldera-config-field">
-		<input type="text" id="{{_id}}_filter_id" class="block-input field-config magic-tag-enabled" name="{{_name}}[filter_id]" value="{{filter_id}}">
+		{{{_field slug="filter_id"}}}
+	</div>
+</div>
+
+<div class="caldera-config-group">
+	<label>Additional desired fields from Pods</label>
+	<div class="caldera-config-field">
+		<input type="text" id="{{_id}}_extra_fields" class="block-input field-config magic-tag-enabled" name="{{_name}}[extra_fields]" value="{{extra_fields}}">
+	</div>
+</div>
+
+<div class="caldera-config-group">
+	<label>Enable multi-select</label>
+	<div class="caldera-config-field">
+		<label><input type="checkbox" id="{{_id}}_multi" class="field-config" name="{{_name}}[multi]" value="1" {{#if my_option}}checked="checked"{{/if}}></label>
 	</div>
 </div>
 
 <div class="caldera-config-group">
 	<label>Hide field output (no dropdown)</label>
 	<div class="caldera-config-field">
-		<label><input type="checkbox" class="field-config {{_id}}_hide" name="{{_name}}[hide]" value="1" {{#if my_option}}checked="checked"{{/if}}></label>
+		<label><input type="checkbox" id="{{_id}}_hide" class="field-config" name="{{_name}}[hide]" value="1" {{#if my_option}}checked="checked"{{/if}}></label>
 	</div>
 </div>

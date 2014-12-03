@@ -12,19 +12,26 @@
 	$whichpod = $field['config']['pod'];
 	$filter_by = $field['config']['filter_by'];
 	$filter_id = $field['config']['filter_id'];
+	$extra_fields = $field['config']['extra_fields'];
 	$hide_output = $field['config']['hide'];
+	$multi = $field['config']['multi'];
 ?>
 
 <?php if (!$hide_output) { ?>
 <?php echo $wrapper_before; ?>
 	<?php echo $field_label; ?>
 	<?php echo $field_before; ?>
-		<select <?php echo $field_placeholder; ?> 
+		<?php if ($multi) {
+
+		} else { ?>
+		<select 
+			<?php echo $field_placeholder; ?> 
 			id="<?php echo $field_id; ?>" 
 			data-field="<?php echo $field_base_id; ?>" 
 			class="<?php echo $field_class; ?>" 
 			name="<?php echo $field_name; ?>" <?php echo $field_required; ?> >
 		</select>
+		<?php } ?>
 		<?php echo $field_caption; ?>
 	<?php echo $field_after; ?>
 <?php echo $wrapper_after; ?>
@@ -42,14 +49,15 @@
 	jQuery(document).ready(function() {
 		//console.log("<?php echo $whichpod; ?>");
 		var mydir = "<?php echo plugin_dir_url(__FILE__); ?>";
-		var fieldToWatch = "div.<?php echo $filter_id; ?> select";
+		var fieldToWatch = "#<?php echo $filter_id; ?>_1";
 		var nextfilter = "<?php echo $filter_by; ?>";
 		var nextpod = "<?php echo $whichpod; ?>";
+		var extraFields = "<?php echo $extra_fields; ?>";
 		var isHidden = "<?php echo $hide_output; ?>";
 		var fieldId = "#<?php echo $field_id; ?>";
 
 		jQuery(fieldToWatch).change(function () {
-			var params = {filter_by: nextfilter, filter_id: this.value, whichpod: nextpod};
+			var params = {filter_by: nextfilter, filter_id: this.value, whichpod: nextpod, extra_fields: extraFields};
 			jQuery.get(
 				mydir + "podscall.php", 
 				params, 
@@ -60,7 +68,7 @@
 					else {
 						jQuery.each(data, function(key, val) {
 							console.log("Id is " + val['id']);
-							jQuery(field_id).append(
+							jQuery(fieldId).append(
 								"<option value=\"" + val['id'] + "\">" + val['name'] + "</option>"
 							);
 						});

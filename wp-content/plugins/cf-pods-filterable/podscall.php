@@ -5,6 +5,7 @@
 	$filter_by = $_GET['filter_by'];
 	$filter_id = strtolower($_GET['filter_id']);
 	$whichpod = $_GET['whichpod'];
+	$extra_fields = explode(",", $_GET['extra_fields']);
 
 	$params = array(
 		"where" => "$filter_by = '$filter_id'"
@@ -29,8 +30,19 @@
 			"id" => $mypod->field($id_field), 
 			"name" => $mypod->field($name_field)
 		);
-		if ($whichpod == "user") {
-			$nextpod['calendar_id'] = $mypod->field("calendar_id");
+		if ($extra_fields != null) {
+			foreach ($extra_fields as $efield) {
+				$field_value = $mypod->field($efield);
+
+				//field exists, and is set
+				if ($field_value != null && $field_value != false){
+					$nextpod[$efield] = $field_value;
+				}
+				//field exists on this pod, but is not set
+				else if ($field_value == false) {
+					$nextpod[$efield] = "";
+				}
+			}
 		}
 		array_push($filtered_pods, $nextpod);
 	}

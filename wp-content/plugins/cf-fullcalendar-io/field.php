@@ -370,6 +370,7 @@ jQuery(document).ready(function() {
 		else { //getting any number of possible calendars for students
 			eventSources = getVariableCalendarIds();
 		}
+		jQuery(CAL_DIV).fullCalendar('removeEventSources');
 		console.log("Sources looks like: " + JSON.stringify(eventSources));
 		jQuery.each(eventSources, function(key, val){
 			jQuery(CAL_DIV).fullCalendar('addEventSource', { 
