@@ -116,9 +116,6 @@ class Calcreation_Processor {
 		// globalised transient object - can be used for passing data between processor stages ( pre -> post etc.. )
 		global $transdata;
 
-		// Get additional form information.
-		$data = $this->form_debug_information($form);
-
 		// Get config values.
 		$admin_account = $config['admin_account'];
 		$tutor_name = Caldera_forms::do_magic_tags($config['tutor_name']);
@@ -127,15 +124,15 @@ class Calcreation_Processor {
 		// Set GCal information and require necessary files.
 		$service = $transdata['gcal_service'];
 		require_once($transdata['gcal_require']);
-		echo "Trying things";
+		echo "Trying things"; // DEBUG
 
 		$calendar = new Google_Service_Calendar_Calendar();
 		$calendar->setSummary($tutor_name);
-		$calendar->setTimeZone('America/Los_Angeles');
+		$calendar->setTimeZone('America/New_York');
 
 		$createdCalendar = $service->calendars->insert($calendar);
 
-		echo "We made a thing! " . $createdCalendar->getId();
+		echo "We made a thing! " . $createdCalendar->getId(); // DEBUG
 
 		$owner_rule = new Google_Service_Calendar_AclRule();
 		$public_access = new Google_Service_Calendar_AclRule();
@@ -161,22 +158,6 @@ class Calcreation_Processor {
 
 		return $return_meta;
 	}
-
-	private function form_debug_information($form) {
-		$data = array(); // build a data array of submitted data
-		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
-
-		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
-			if( in_array( $field_id, array( '_entry_id', '_entry_token' ) ) )
-				continue; // Ignores irrelevant debug fields.
-			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
-				continue; //ignores buttons
-
-			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = $field_value; // get the field slug for the key instead
-		}
-		return $data;
-	}
-
 }
 
 // Create the instance. (can be done however you like)
