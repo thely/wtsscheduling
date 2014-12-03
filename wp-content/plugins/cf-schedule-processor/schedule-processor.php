@@ -128,6 +128,7 @@ class Schedule_Processor {
 		$service = $transdata['gcal_service'];
 		require_once($transdata['gcal_require']);
 
+		if ($edited_events != null) {
 		foreach($edited_events as $event_info) {
 			// New event created.
 			if ($event_info['mode'] == "insert") {
@@ -162,6 +163,7 @@ class Schedule_Processor {
 			}
 		}
 	}
+	}
 
 	private function add_attendee($email, &$event) {
 		$guest = new Google_Service_Calendar_EventAttendee();
@@ -194,6 +196,12 @@ class Schedule_Processor {
 			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = $field_value; // get the field slug for the key instead
 		}
 		return $data;
+	}
+
+	private function echo_error($text) {
+		echo "<pre style='border: 1px solid red; text-align: center;'>";
+		echo "Error: $text";
+		echo "</pre>";
 	}
 
 }
