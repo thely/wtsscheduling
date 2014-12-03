@@ -385,9 +385,15 @@ jQuery(document).ready(function() {
 			setCalendarIds();
 		}
 		else {
-			jQuery("#<?php echo $new_email; ?>_1").change(setCalendarIds);
+			console.log("How about now?");
+			//console.log(jQuery._data(jQuery(filter), "events"));
+			var filter = "#<?php echo $new_email; ?>_1";
+			jQuery(filter).change(setCalendarIds);
+			console.log(jQuery(filter).val());
+			console.log("worked?");			
 		}
 	});
+
 
 	// Create FullCalendar element.
 	jQuery(CAL_DIV).fullCalendar({
@@ -445,5 +451,6 @@ jQuery(document).ready(function() {
 			updateCalChanges(eventData);
 		}
 	});
+
 });
 </script>
