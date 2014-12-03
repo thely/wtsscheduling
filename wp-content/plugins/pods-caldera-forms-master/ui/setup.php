@@ -46,3 +46,19 @@ $all_pods          = $pods_api->load_pods( array( 'names' => true ) );
 		return true;
 	}
 {{/script}}
+
+<div class="caldera-config-group">
+	<label for="{{_id}}_first_name">First name</label>
+	<div class="caldera-config-field">
+		<input type=text class="block-input caldera-field-bind magic-tag-enabled field-config" 
+			id="{{_id}}_first_name" name="{{_name}}[first_name]" value="{{first_name}}">
+	</div>
+</div>
+
+<div class="caldera-config-group">
+	<label for="{{_id}}_last_name">Last name</label>
+	<div class="caldera-config-field">
+		<input type=text class="block-input caldera-field-bind magic-tag-enabled field-config" 
+			id="{{_id}}_last_name" name="{{_name}}[last_name]" value="{{last_name}}">
+	</div>
+</div>

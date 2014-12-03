@@ -73,6 +73,10 @@ function pods_cf_init () {
 	add_filter( 'caldera_forms_render_get_field_type-radio', 'pods_cf_populate_options');
 	add_filter( 'caldera_forms_render_get_field_type-checkbox', 'pods_cf_populate_options');
 
+	add_filter( 'caldera_forms_render_get_field_slug-your_courses', 'pods_cf_preload_options');
+	add_filter( 'caldera_forms_render_get_field_slug-center', 'pods_cf_preload_options');
+	add_filter( 'caldera_forms_render_get_form', 'pods_cf_preload_all');
+
 	if( is_admin() ){
 		/**
 		 * Ajax Controls for building Field Binding

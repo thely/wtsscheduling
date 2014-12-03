@@ -27,7 +27,9 @@
 				}
 
 				?>
-				<option value="<?php echo $option['value']; ?>" <?php if( $field_value == $option['value'] ){ ?>selected="selected"<?php } ?>><?php echo $option['label']; ?></option>
+				<option value="<?php echo $option['value']; ?>" 
+					<?php if( $field_value == $option['value'] || 
+					(array_key_exists('selected', $option) && $option['selected'] )){ ?>selected="selected"<?php } ?>><?php echo $option['label']; ?></option>
 				<?php
 			}
 		} ?>
