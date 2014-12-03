@@ -56,6 +56,9 @@
 		var isHidden = "<?php echo $hide_output; ?>";
 		var fieldId = "#<?php echo $field_id; ?>";
 
+		//console.log(fieldToWatch + ", " + nextfilter + ", " + extraFields);
+		//console.dir(jQuery._data(jQuery(fieldToWatch)[0], 'events'));
+
 		jQuery(fieldToWatch).change(function () {
 			var params = {filter_by: nextfilter, filter_id: this.value, whichpod: nextpod, extra_fields: extraFields};
 			jQuery.get(
@@ -66,6 +69,7 @@
 						jQuery(fieldId).val(encodeURI(JSON.stringify(data))).change();
 					}
 					else {
+						jQuery(fieldId).empty();
 						jQuery.each(data, function(key, val) {
 							console.log("Id is " + val['id']);
 							jQuery(fieldId).append(
