@@ -29,23 +29,16 @@
 
 ?>
 <div class="caldera-config-group">
-	<label for="{{_id}}_admin_account">Associated admin account</label>
+	<label for="{{_id}}_centers">Centers</label>
 	<div class="caldera-config-field">
-		<input type="text" id="{{_id}}_admin_account" class="block-input field-config magic-tag-enabled required" name="{{_name}}[admin_account]" value="{{admin_account}}">
-		<p>Required. Tag corresponding to calendar field output.</p>
+		<input type="text" id="{{_id}}_centers" class="block-input field-config magic-tag-enabled required" name="{{_name}}[centers]" value="{{centers}}">
+		<p>Required. Should corresponding to the center selection form field.</p>
 	</div>
 </div>
 <div class="caldera-config-group">
-  <label for="{{_id}}_tutor_name">Calendar name</label>
+  <label for="{{_id}}_tutor_id">Tutor Id</label>
   <div class="caldera-config-field">
-    <input type="text" id="{{_id}}_tutor_name" class="block-input field-config magic-tag-enabled required" name="{{_name}}[tutor_name]" value="{{tutor_name}}">
-    <p>Required. This must be the new tutor's name.</p>
-  </div>
-</div>
-<div class="caldera-config-group">
-  <label for="{{_id}}_tutor_email">Tutor email</label>
-  <div class="caldera-config-field">
-    <input type="text" id="{{_id}}_tutor_email" class="block-input field-config magic-tag-enabled" name="{{_name}}[tutor_email]" value="{{tutor_email}}">
+    <input type="text" id="{{_id}}_tutor_id" class="block-input field-config magic-tag-enabled" name="{{_name}}[tutor_id]" value="{{tutor_id}}">
     <p>Required. Email for tutor changing schedule.</p>
   </div>
 </div>

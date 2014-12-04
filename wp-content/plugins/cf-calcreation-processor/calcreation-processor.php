@@ -90,14 +90,11 @@ class Calcreation_Processor {
 			"description"       =>  __("Processor to handle adding new calendars.", $this->plugin_slug),			// Required 	: Processor description
 			"icon"				=>	plugin_dir_url(__FILE__) . "assets/icon.png",				// Optional 	: Icon / Logo displayed in processors picker modal
 			"author"            =>  'Becky Brown',											// Optional 	: Author name 
-			"processor"     	=>  array( $this, 'calcreation_form_processor' ),							// Optional 	: Processor function used to handle data, cannot stop processing. Returned data saved as entry meta
+			"post_processor"     	=>  array( $this, 'calcreation_form_processor' ),							// Optional 	: Processor function used to handle data, cannot stop processing. Returned data saved as entry meta
 			"template"          =>  plugin_dir_path(__FILE__) . "includes/config.php",			// Optional 	: Config template for setting up the processor in form builder
 			"meta_template"		=>  plugin_dir_path(__FILE__) . "includes/meta.php",			// Optional 	: template for displaying meta data returned from processor function 
 			"conditionals"		=>	true,														// Optional 	: default true  : setting false will disable conditionals for the processor (use always)
-			"single"			=>	false,
-			"magic_tags"		=>	array(
-				"new_calendar_id"
-			)												// Optional 	: default false : setting as true will only allow once per form
+			"single"			=>	false							// Optional 	: default false : setting as true will only allow once per form
 		);
 
 		return $processors;
@@ -117,22 +114,82 @@ class Calcreation_Processor {
 		global $transdata;
 
 		// Get config values.
-		$admin_account = $config['admin_account'];
-		$tutor_name = Caldera_forms::do_magic_tags($config['tutor_name']);
-		$tutor_email = Caldera_forms::do_magic_tags($config['tutor_email']);
+		$centers = explode(", ", Caldera_forms::do_magic_tags($config['centers']));
+		$tutor_id = Caldera_forms::do_magic_tags($config['tutor_id']);
 
+		// Retrieve tutor name and email.
+		$result = pods('user', $tutor_id);
+		if ($result->exists()) {
+			$tutor_email = $result->display('user_email');
+			$tutor_name = $result->display('display_name');
+		} else {
+			// Handle case where existing user was not found.
+			$this->echo_error("Tutor not found using id: ".$tutor_id);
+			die;
+		}
+		
 		// Set GCal information and require necessary files.
-		$service = $transdata['gcal_service'];
+		$this->service = $transdata['gcal_service'];
 		require_once($transdata['gcal_require']);
-		echo "Trying things"; // DEBUG
 
+		// Create string to get calendars by specific speaking center.
+		$calendar_queries = array_map(function($center_id) use ($tutor_id) {
+			return array(
+				"query" => "tutor.id = $tutor_id and center.id = $center_id",
+				"center" => $center_id
+			);
+		}, array_values($centers));
+
+		$needed_centers = array();
+
+		// Check to see if calendars exist that are associated with the
+		// tutor/center combinations.
+		foreach($calendar_queries as &$calendar_query) {
+			$result = pods('calendar', array(
+				'where' => $calendar_query["query"],
+				'limit' => 1
+			));
+			// Existing calendar not found.
+			if (!($result->total() == 1)) {
+				$needed_centers[] = $calendar_query["center"];
+			}
+		}
+
+		// Create Google Calendar and Pod to hold information.
+		foreach($needed_centers as $needed_center) {
+			// TODO: Turn this into a single query and use fetch() with id
+			$center_info = pods('center', $needed_center);
+			// Create calendar
+			if ($center_info->exists()) {
+				$calendar_admin = $center_info->display("calendar_admin");
+				$new_calendar_id = $this->create_calendar($tutor_name, $calendar_admin);
+				$this->create_calendar_pod($tutor_id, $needed_center, $new_calendar_id);
+			} else {
+				// Handle center not existing.
+				$this->echo_error("Center not found with id: ".$needed_center);
+				die;
+			}
+		}
+	}
+
+	/**
+	 * Takes in a string corresponding to the email of a Google account
+	 * and creates a Google Calendar and associates it as a secondary
+	 * calendar.
+	 *
+	 * @param  $name  {string}  the desired name of the Google Calendar.
+	 * @param  $admin_account  {string}  the email of the Google Account
+	 * to associate the calendar with.
+	 * @return  {string}  the Google Calendar id of the newly created
+	 * Google Calendar.
+	 */
+	public function create_calendar($name, $admin_account) {
 		$calendar = new Google_Service_Calendar_Calendar();
-		$calendar->setSummary($tutor_name);
+		$calendar->setSummary($name);
 		$calendar->setTimeZone('America/New_York');
 
-		$createdCalendar = $service->calendars->insert($calendar);
-
-		echo "We made a thing! " . $createdCalendar->getId(); // DEBUG
+		$createdCalendar = $this->service->calendars->insert($calendar);
+		$calendar_id = $createdCalendar->getId();
 
 		$owner_rule = new Google_Service_Calendar_AclRule();
 		$public_access = new Google_Service_Calendar_AclRule();
@@ -144,19 +201,46 @@ class Calcreation_Processor {
 		$owner_rule->setScope($scope);
 		$owner_rule->setRole("owner");
 
-		$createdRule = $service->acl->insert($createdCalendar->getId(), $owner_rule);
+		$createdRule = $this->service->acl->insert($calendar_id, $owner_rule);
 
 		$public_scope->setType("default");
 		$public_access->setScope($public_scope);
 		$public_access->setRole("reader");
 
-		$nextRule = $service->acl->insert($createdCalendar->getId(), $public_access);
+		$nextRule = $this->service->acl->insert($calendar_id, $public_access);
 
-		$return_meta = array(
-			"new_calendar_id" => $createdCalendar->getId()
+		return $calendar_id;
+	}
+
+	/**
+	 * Creates a Calendar Pod, associates it with the given tutor and
+	 * center, and sets its calendar_id field to the given Google Calendar
+	 * id.
+	 *
+	 * @param  $tutor_id  {integer}  the id of the tutor to associate the
+	 * Google Calendar with.
+	 * @param  $center_id  {integer}  the id of the center to associate
+	 * the calendar with.
+	 * @param  $google_calendar_id  {string}  the id, returned by
+	 * create_calendar, to store as the calendar_id for the newly created
+	 * calendar pod.
+	 * @return  {integer}  the id of the newly created calendar pod object
+	 */
+	public function create_calendar_pod($tutor_id, $center_id, $google_calendar_id) {
+		$pod = pods('calendar');
+		$data = array(
+			'tutor' => $tutor_id,
+			'center' => $center_id,
+			'calendar_id' => $google_calendar_id
 		);
 
-		return $return_meta;
+		return $pod->add($data);
+	}
+
+	private function echo_error($text) {
+		echo "<pre style='border: 1px solid red; text-align: center;'>";
+		echo "Error: $text";
+		echo "</pre>";
 	}
 }
 
