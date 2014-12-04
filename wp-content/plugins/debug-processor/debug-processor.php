@@ -58,7 +58,7 @@ class DebugProcessor {
 			"name"              =>  __("Debug Processor", $this->plugin_slug),					// Required	 	: Processor name
 			"description"       =>  __("Spits out data for debugging purposes", $this->plugin_slug),			// Required 	: Processor description
 			"icon"				=>	plugin_dir_url(__FILE__) . "assets/icon.png",				// Optional 	: Icon / Logo displayed in processors picker modal
-			"processor"     	=>  array( $this, 'debug_form_processor' ),							// Optional 	: Processor function used to handle data, cannot stop processing. Returned data saved as entry meta
+			"post_processor"     	=>  array( $this, 'debug_form_processor' ),							// Optional 	: Processor function used to handle data, cannot stop processing. Returned data saved as entry meta
 			"template"          =>  plugin_dir_path(__FILE__) . "includes/config.php",			// Optional 	: Config template for setting up the processor in form builder
 			//"meta_template"		=>  plugin_dir_path(__FILE__) . "includes/meta.php",			// Optional 	: template for displaying meta data returned from processor function 
 			"conditionals"		=>	true,														// Optional 	: default true  : setting false will disable conditionals for the processor (use always)
@@ -107,6 +107,8 @@ class DebugProcessor {
 		
 		$data = array(); // build a data array of submitted data
 		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
+		$config_field = Caldera_forms::do_magic_tags($config['field']);
+
 
 		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
 			if( in_array( $field_id, array( '_entry_id', '_entry_token' ) ) )
@@ -114,14 +116,20 @@ class DebugProcessor {
 			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
 				continue; //ignores buttons
 
-			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = urldecode($field_value);
+			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = $field_value;
 		}
 
 		// $data should contain slug:value
 		// Heres an output to show on screen.
 		echo '<pre>';
-		//echo "Raw Data\r\n";
-		//print_r( $raw_data );
+		if ($config_field) {
+			echo "Config Field\r\n";
+			print_r( explode(", ", $config_field) );
+			echo "\r\n\r\n";
+		}
+
+		echo "Raw Data\r\n";
+		print_r( $raw_data );
 	 
 		echo "\r\nClean Form Data\r\n";
 		print_r( $data );
