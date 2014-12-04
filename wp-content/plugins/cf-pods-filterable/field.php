@@ -15,6 +15,7 @@
 	$extra_fields = $field['config']['extra_fields'];
 	$hide_output = $field['config']['hide'];
 	$multi = $field['config']['multi'];
+	$extra_where = $field['config']['extra_where'];
 ?>
 
 <?php if (!$hide_output) { ?>
@@ -42,7 +43,7 @@
 	data-field="<?php echo $field_base_id; ?>" 
 	class="<?php echo $field_class; ?> final_end_source" 
 	name="<?php echo $field_name; ?>" 
-	style="visibility: hidden;" >
+	style="visibility: hidden;">
 <?php } ?>
 
 <script type="text/javascript">
@@ -53,14 +54,21 @@
 		var nextfilter = "<?php echo $filter_by; ?>";
 		var nextpod = "<?php echo $whichpod; ?>";
 		var extraFields = "<?php echo $extra_fields; ?>";
+		var extraWhere = "<?php echo $extra_where; ?>";
 		var isHidden = "<?php echo $hide_output; ?>";
 		var fieldId = "#<?php echo $field_id; ?>";
 
 		//console.log(fieldToWatch + ", " + nextfilter + ", " + extraFields);
 		//console.dir(jQuery._data(jQuery(fieldToWatch)[0], 'events'));
 
-		jQuery(fieldToWatch).change(function () {
-			var params = {filter_by: nextfilter, filter_id: this.value, whichpod: nextpod, extra_fields: extraFields};
+		var updateOutputByFilter = function() {
+			var params = {
+				filter_by: nextfilter, 
+				filter_id: this.value, 
+				whichpod: nextpod, 
+				extra_fields: extraFields,
+				extra_where: extraWhere
+			};
 			jQuery.get(
 				mydir + "podscall.php", 
 				params, 
@@ -82,7 +90,9 @@
 			).error(function(jqXHR, textStatus, errorThrown) {
 				console.log(textStatus);
 			});
-		});
+		}
+
+		jQuery(fieldToWatch).change(updateOutputByFilter);
 		//var newthing = jQuery("<?php echo $field_id?>_selecter option:selected").val();
 		//console.log(newthing);
 	});
