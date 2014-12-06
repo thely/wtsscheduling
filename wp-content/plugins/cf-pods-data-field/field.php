@@ -2,6 +2,7 @@
 $pod_type = $field['config']['pod'];
 $where_query = Caldera_forms::do_magic_tags($field['config']['where_query']);
 $return_fields = explode(",", $field['config']['return_field']);
+$hide = $field['config']['hide'];
 
 $params = array(
 	"where" => $where_query
@@ -29,7 +30,7 @@ echo $wrapper_before;
 echo $field_label;
 echo $field_before;
 ?>
-	<input type="text"
+	<input type="<?php echo ($hide ? "hidden" : "text"); ?>"
 	id="<?php echo $field_id; ?>"
 	data-field="<?php echo $field_base_id; ?>"
 	class="<?php echo $field_class; ?> final_end_source"
