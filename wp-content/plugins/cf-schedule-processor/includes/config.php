@@ -36,14 +36,21 @@
 	</div>
 </div>
 <div class="caldera-config-group">
-  <label for="{{_id}}_calendar_id">Calendar ID</label>
+  <label for="{{_id}}_tutor_id">Tutor ID</label>
   <div class="caldera-config-field">
-    <input type="text" id="{{_id}}_calendar_id" class="block-input field-config magic-tag-enabled required" name="{{_name}}[calendar_id]" value="{{calendar_id}}">
-    <p>Required. This must be set to the Calendar ID.</p>
+    <input type="text" id="{{_id}}_tutor_id" class="block-input field-config magic-tag-enabled" name="{{_name}}[tutor_id]" value="{{tutor_id}}">
+    <p>Required. ID for tutor changing schedule.</p>
   </div>
 </div>
 <div class="caldera-config-group">
-  <label for="{{_id}}_tutor_email">Tutor email</label>
+  <label for="{{_id}}_tutor_name">Tutor Name</label>
+  <div class="caldera-config-field">
+    <input type="text" id="{{_id}}_tutor_name" class="block-input field-config magic-tag-enabled" name="{{_name}}[tutor_name]" value="{{tutor_name}}">
+    <p>Required. Name for tutor changing schedule.</p>
+  </div>
+</div>
+<div class="caldera-config-group">
+  <label for="{{_id}}_tutor_email">Tutor Name</label>
   <div class="caldera-config-field">
     <input type="text" id="{{_id}}_tutor_email" class="block-input field-config magic-tag-enabled" name="{{_name}}[tutor_email]" value="{{tutor_email}}">
     <p>Required. Email for tutor changing schedule.</p>

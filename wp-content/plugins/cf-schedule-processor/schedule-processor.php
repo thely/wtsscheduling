@@ -112,57 +112,54 @@ class Schedule_Processor {
 		// globalised transient object - can be used for passing data between processor stages ( pre -> post etc.. )
 		global $transdata;
 
-		// Get additional form information.
-		$data = $this->form_debug_information($form);
-
 		// Get config values.
 		$tutor_email = Caldera_forms::do_magic_tags($config['tutor_email']);
+		$tutor_name = Caldera_forms::do_magic_tags($config['tutor_name']);
+		$tutor_id = Caldera_forms::do_magic_tags($config['tutor_id']);
+
 		$encoded_event_info = Caldera_forms::do_magic_tags($config['event_details']);
 
 		// Get JSON information from calendar field.
 		$event_details = json_decode(urldecode($encoded_event_info), true);
 		$edited_events = $event_details['events'];
-		$calendar_id = $event_details['calendar_id'];
 
 		// Set GCal information and require necessary files.
 		$service = $transdata['gcal_service'];
 		require_once($transdata['gcal_require']);
 
 		if ($edited_events != null) {
-		foreach($edited_events as $event_info) {
-			// New event created.
-			if ($event_info['mode'] == "insert") {
-				$newEvent = new Google_Service_Calendar_Event();
-				$newEvent->setSummary("**V2** set by $tutor_email");
-				$newEvent->setDescription("Tutor email: $tutor_email, tutor name: {$data['name']}.");
-				$newEvent->setStart($this->make_time($event_info['start']));
-				$newEvent->setEnd($this->make_time($event_info['end']));
-				$newEvent->setAttendees($this->add_attendee($tutor_email, $newEvent));
+			foreach($edited_events as $event_info) {
+				$calendar_id = $event_info['calendar_id'];
+				// New event created.
+				if ($event_info['mode'] == "insert") {
+					$newEvent = new Google_Service_Calendar_Event();
+					$newEvent->setSummary("**V2** set by $tutor_email");
+					$newEvent->setDescription("Tutor email: $tutor_email, tutor name: $tutor_name.");
+					$newEvent->setStart($this->make_time($event_info['start']));
+					$newEvent->setEnd($this->make_time($event_info['end']));
+					$newEvent->setAttendees($this->add_attendee($tutor_email, $newEvent));
 
-				$extendedProperties = new Google_Service_Calendar_EventExtendedProperties();
-				$extendedProperties->setPrivate(array (
-					"tutor_email" 		=> $tutor_email,
-					"tutor_name" 		=> $data['name'],
-					"is_group" 			=> "false",
-					"is_reserved"		=> "false"
-				));
-				$extendedProperties->setShared(array());
-				$newEvent->setExtendedProperties($extendedProperties);
+					$extendedProperties = new Google_Service_Calendar_EventExtendedProperties();
+					$extendedProperties->setPrivate(array (
+						"tutor_id" 		=> $tutor_id,
+						"is_group" 			=> "false",
+						"is_reserved"		=> "false"
+					));
+					$extendedProperties->setShared(array());
+					$newEvent->setExtendedProperties($extendedProperties);
 
-				$createdEvent = $service->events->insert($calendar_id, $newEvent);
-			}
-			else if ($event_info['mode'] == "update") { // Existing event updated.
-				$oldEvent = $service->events->get($calendar_id, $event_info['id']);
-				$oldEvent->setStart($this->make_time($event_info['start']));
-				$oldEvent->setEnd($this->make_time($event_info['end']));
+					$createdEvent = $service->events->insert($calendar_id, $newEvent);
+				} else if ($event_info['mode'] == "update") { // Existing event updated.
+					$oldEvent = $service->events->get($calendar_id, $event_info['id']);
+					$oldEvent->setStart($this->make_time($event_info['start']));
+					$oldEvent->setEnd($this->make_time($event_info['end']));
 
-				$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
-			}
-			else if ($event_info['mode'] == "remove") { // Removing event.
-				$service->events->delete($calendar_id, $event_info['id']);
+					$newEvent = $service->events->update($calendar_id, $oldEvent->getId(), $oldEvent);
+				} else if ($event_info['mode'] == "remove") { // Removing event.
+					$service->events->delete($calendar_id, $event_info['id']);
+				}
 			}
 		}
-	}
 	}
 
 	private function add_attendee($email, &$event) {
@@ -183,27 +180,11 @@ class Schedule_Processor {
 		return $newTime;
 	}
 
-	private function form_debug_information($form) {
-		$data = array(); // build a data array of submitted data
-		$raw_data = Caldera_Forms::get_submission_data( $form ); // Raw data is an array with field_id as the key
-
-		foreach( $raw_data as $field_id => $field_value ){ // create a new array using the slug as the key
-			if( in_array( $field_id, array( '_entry_id', '_entry_token' ) ) )
-				continue; // Ignores irrelevant debug fields.
-			if( in_array( $form[ 'fields' ][ $field_id ][ 'type' ], array( 'button', 'html' ) ) )
-				continue; //ignores buttons
-
-			$data[ $form[ 'fields' ][ $field_id ][ 'slug' ] ] = $field_value; // get the field slug for the key instead
-		}
-		return $data;
-	}
-
 	private function echo_error($text) {
 		echo "<pre style='border: 1px solid red; text-align: center;'>";
 		echo "Error: $text";
 		echo "</pre>";
 	}
-
 }
 
 // Create the instance. (can be done however you like)
