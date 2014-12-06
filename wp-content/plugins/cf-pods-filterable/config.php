@@ -28,14 +28,14 @@ $all_pods          = pods_api()->load_pods( array( 'names' => true ) );
 </div>
 
 <div class="caldera-config-group">
-	<label>Filter this pod by (Pods SQL query)</label>
+	<label>Filter condition</label>
 	<div class="caldera-config-field">
 		<input type="text" id="{{_id}}_filter_by" class="block-input field-config magic-tag-enabled" name="{{_name}}[filter_by]" value="{{filter_by}}">
 	</div>
 </div>
 
 <div class="caldera-config-group">
-	<label>Field to filter from</label>
+	<label>Filter value by field</label>
 	<div class="caldera-config-field">
 		{{{_field slug="filter_id"}}}
 	</div>
@@ -45,6 +45,13 @@ $all_pods          = pods_api()->load_pods( array( 'names' => true ) );
 	<label>Additional desired fields from Pods</label>
 	<div class="caldera-config-field">
 		<input type="text" id="{{_id}}_extra_fields" class="block-input field-config magic-tag-enabled" name="{{_name}}[extra_fields]" value="{{extra_fields}}">
+	</div>
+</div>
+
+<div class="caldera-config-group">
+	<label>Additional WHERE filters</label>
+	<div class="caldera-config-field">
+		<input type="text" id="{{_id}}_extra_where" class="block-input field-config magic-tag-enabled" name="{{_name}}[extra_where]" value="{{extra_where}}">
 	</div>
 </div>
 

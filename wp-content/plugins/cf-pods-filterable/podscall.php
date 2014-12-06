@@ -7,9 +7,19 @@
 	$filter_id = $_GET['filter_id'];
 	$whichpod = $_GET['whichpod'];
 	$extra_fields = explode(",", $_GET['extra_fields']);
+	$extra_where = str_replace("\\", "", Caldera_Forms::do_magic_tags($_GET['extra_where']));
+
+
+	$querystring = "";
+	if ($extra_where != null) {
+		$querystring = "$filter_by = '$filter_id' AND $extra_where";
+	}
+	else {
+		$querystring = "$filter_by = '$filter_id'";
+	}
 
 	$params = array(
-		"where" => "$filter_by = '$filter_id'"
+		"where" => $querystring
 	);
 
 	$mypod = pods($whichpod, $params);
