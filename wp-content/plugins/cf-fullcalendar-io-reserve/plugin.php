@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Caldera Forms - FullCalendar.io field
+ * Plugin Name: Caldera Forms - FullCalendar.io Reservation Field
  * Plugin URI:  
  * Description: Making FullCalendar.io a custom field selector
  * Version:     0.0.1
@@ -13,7 +13,7 @@
 
 // Add field type config to caldera forms fields
 // use a function name that is unique of if whithin a class, array($this, 'method_to_use')
-add_filter('caldera_forms_get_field_types', 'fullcal_field_register_function');
+add_filter('caldera_forms_get_field_types', 'fullcal_reservation_field_register_function');
 define('FC_URL', plugin_dir_path(__FILE__));
 /**
  * field type register function to add new field to registered fields array
@@ -21,17 +21,15 @@ define('FC_URL', plugin_dir_path(__FILE__));
  * @param array $fields all registered field types with key as field type slug
  * @return array $fields
  */
-function fullcal_field_register_function($fields){
+function fullcal_reservation_field_register_function($fields){
 
 	//be sure to give you field a unique slug. you are also able to redefine exisitng field by simply redefining it.
 	// the only REQUIRED values are name, file, category, description
 	$fields['fullcalendar_io_reserve'] = array(
-		"field"				=>	__("FullCalendar.io", 'fullcalendar_io_reserve'),
+		"field"				=>	"FullCalendar.io Reservation Field",
 		"file"				=>	plugin_dir_path( __FILE__ ) . 'field.php',
 		"category"			=>	"Basic,Pickers", 									// comma separated list of categories to place the field in
-		"description" 		=>	__('Use FullCal to select dates/times','fullcalendar_io_reserve'), 	// description explains what the field is for
-		"viewer"			=>	'my_viewer_function', // array($this, 'viewer_function')		// viewer function is used to processes the stored value for display purposes. i.e if saving a saving a post ID the viewer whould get the post title to display
-		"handler"			=>	'my_handler_function', // array($this, 'handler_function')		// handler function is used to processes the submitted value before storage. Like a file uploader to store the saved URL
+		"description" 		=>	'FullCalendar field for setting reservations', 	// description explains what the field is for
 		"setup"				=>	array(															// Setup array are config options used within the form editor
 			"template"		=>	plugin_dir_path( __FILE__ ) . 'config.php',						// template is the config tempalte. the file loaded to capture field config options
 			"preview"		=>	plugin_dir_path( __FILE__ ) . 'preview.php',					// the preview file is the file used for the preview of the field in the form editor
@@ -73,41 +71,7 @@ function fullcal_field_register_function($fields){
 
 }
 
-/**
- * field type viewer function to filter the stored value into a human readable format.
- *
- * @param string|array $value the stored value of the captured entry
- * @param array $field the full field config array associated with the entry
- * @param array $form the full form config structure 
- * @return string $value the filtered version of $value
- */
-function my_viewer_function($value, $field, $form){
-	// do stuff to the value. like add an image url to an <img> tag etc..
-
-	return "THIS IS VIEWER-FAKE $value.";
-}
-
-
-/**
- * field type handler function to handle the submitted value to be stored
- *
- * @param string|array raw submitted $value to be processed for storage
- * @param array $field the full field config array associated with the entry
- * @param array $form the full form config structure 
- * @return string|array $value the filtered version of $value to be stored
- */
-function my_handler_function($value, $field, $form){
-	// do stuff to the value. like save a file upload and return the stored URL
-	// arrays can be returned but a viewer function will be required to convert the array to a viewable string.
-
-	// return a WP_Error to return and trigger an erro. the error will shown to the user
-	//return new WP_Error( 'error', 'Nope, Sorry. Try again.');
-
-	//$value = "THIS IS HANDLER-FAKE $value.";
-	return $value;
-}
-
-function register_fullcal_scripts () {
+function register_fullcal_reserve_scripts () {
 	wp_enqueue_style("fc-ui-css", plugins_url("js/lib/cupertino/jquery-ui.min.css", __FILE__), array(), time(), 'all');	
 	wp_enqueue_style("fc-fullcal-css", plugins_url("js/fullcalendar.css", __FILE__), array(), time(), 'all');
 	wp_enqueue_style("fc-jquery-ui-timepicker-css", plugins_url("lib/jquery-ui-timepicker-addon.css", __FILE__), array(), time(), 'all');
@@ -126,7 +90,7 @@ function register_fullcal_scripts () {
 	wp_enqueue_style('fc-fullcal-css');
 }
 
-add_action('wp_enqueue_scripts', 'register_fullcal_scripts', 12);
+add_action('wp_enqueue_scripts', 'register_fullcal_reserve_scripts', 12);
 
 
 
