@@ -85,15 +85,15 @@ class Schedule_Processor {
 		// It is possible to replace an existing processor by redefining it and hooking in with a lower priority i.e 100
 
 		$processors['schedule_processor'] 	= array(
-			"name"              =>  __("Schedule Processor", $this->plugin_slug),					// Required	 	: Processor name
-			"description"       =>  __("Processor to handle schedule management.", $this->plugin_slug),			// Required 	: Processor description
-			"icon"				=>	plugin_dir_url(__FILE__) . "assets/icon.png",				// Optional 	: Icon / Logo displayed in processors picker modal
-			"author"            =>  'Chris Hunt',											// Optional 	: Author name 
-			"processor"     	=>  array( $this, 'form_processor' ),							// Optional 	: Processor function used to handle data, cannot stop processing. Returned data saved as entry meta
-			"template"          =>  plugin_dir_path(__FILE__) . "includes/config.php",			// Optional 	: Config template for setting up the processor in form builder
-			"meta_template"		=>  plugin_dir_path(__FILE__) . "includes/meta.php",			// Optional 	: template for displaying meta data returned from processor function 
-			"conditionals"		=>	true,														// Optional 	: default true  : setting false will disable conditionals for the processor (use always)
-			"single"			=>	false														// Optional 	: default false : setting as true will only allow once per form
+			"name"              =>  "Schedule Processor",
+			"description"       =>  "Processor to handle schedule management.",
+			"icon"				=>	plugin_dir_url(__FILE__) . "assets/icon.png",
+			"author"            =>  'Chris Hunt',
+			"processor"     	=>  array( $this, 'form_processor' ),
+			"template"          =>  plugin_dir_path(__FILE__) . "includes/config.php",
+			"meta_template"		=>  plugin_dir_path(__FILE__) . "includes/meta.php",
+			"conditionals"		=>	true,
+			"single"			=>	false
 		);
 
 		return $processors;
