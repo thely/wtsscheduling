@@ -69,7 +69,7 @@
 				extra_fields: extraFields,
 				extra_where: extraWhere
 			};
-			jQuery.get(
+			jQuery.post(
 				mydir + "podscall.php", 
 				params, 
 				function(data) {

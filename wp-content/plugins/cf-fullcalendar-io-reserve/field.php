@@ -6,9 +6,11 @@
 	<?php echo $field_caption; ?>
 <?php echo $field_after; ?>
 <?php echo $wrapper_after; ?>
+
 <?php 
-	$new_email = Caldera_forms::do_magic_tags($field['config']['new_email']); 
+	$calendar_ids = Caldera_forms::do_magic_tags($field['config']['calendar_ids']); 
 	$api_key = Caldera_forms::do_magic_tags($field['config']['api_key']);
+	$session_length = Caldera_forms::do_magic_tags($field['config']['session_length'])
 ?>
 <?php
 if (!function_exists('getConfigAsBool')) {
@@ -23,14 +25,17 @@ if (!function_exists('getConfigAsBool')) {
 ?>
 
 <div id="event-dialog-<?php echo $field_id; ?>" title="Edit Event">
-  <p class="validateTips">All form fields are required.</p>
+  <p class="validateTips">Select a timeslot.</p>
  
   <form role="form">
     <fieldset>
+
+
+      <p>Or, enter your own:</p>
       <label for="event-start">Start</label>
-      <input name="event-start" class="event-start">
+      <input name="event-start" class="event-start" />
       <label for="event-end">End</label>
-      <input name="event-end" class="event-end">
+      <input name="event-end" class="event-end" />
       
       <!-- Allow form submission with keyboard without duplicating the dialog button -->
       <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
@@ -44,6 +49,7 @@ jQuery(document).ready(function() {
 	// JS Object to become JSON string output
 	var calChanges = {};
 	calChanges['events'] = {};
+	var sessionLength = 0;
 	// div id of the calendar's location
 	var CAL_DIV = "#<?php echo $field_id; ?>";
 	// div id of modal for this calendar.
@@ -91,39 +97,32 @@ jQuery(document).ready(function() {
 
 	/* Setting up dialog for event editing. */
 	// Form elements for event dialog box.
-	var startElt = jQuery(MODAL_DIV + ' .event-start');
-	var endElt = jQuery(MODAL_DIV + ' .event-end');
-	//var endElt = $(MODAL_DIV + ' .event-start');
+	//var startElt = jQuery(MODAL_DIV + ' .event-start');
+	//var endElt = jQuery(MODAL_DIV + ' .event-end');
+	//-var endElt = $(MODAL_DIV + ' .event-start');
 
 	// Called by modal to update selected event.
 	var editEvent = function() {
 		var calEvent = eventDialog.data('current-event');
 		eventDialog.data('current-event', null);
-		var startTime = startElt.datetimepicker('getDate');
-		var endTime = endElt.datetimepicker('getDate');
+		//var startTime = startElt.datetimepicker('getDate');
+		//var endTime = endElt.datetimepicker('getDate');
 		//  Update event with new times.
-		calEvent.start.hour(startTime.getHours());
-		calEvent.start.minutes(startTime.getMinutes());
-		calEvent.end.hour(endTime.getHours());
-		calEvent.end.minutes(endTime.getMinutes());
+		//calEvent.start.hour(startTime.getHours());
+		//calEvent.start.minutes(startTime.getMinutes());
+		//calEvent.end.hour(endTime.getHours());
+		//calEvent.end.minutes(endTime.getMinutes());
 		// Update field data.
 		updateCalChanges(calEvent);
 		// Update calendar display.
 		jQuery(CAL_DIV).fullCalendar('updateEvent', calEvent);
 		// Close event editor.
 		eventDialog.dialog("close");
+		return false;
 	}
 
-	var removeEvent = function() {
-		var calEvent = eventDialog.data('current-event');
-		eventDialog.data('current-event', null);
-		calEvent['mode'] = "remove";
-		// Update field data.
-		updateCalChanges(calEvent);
-		// Update calendar display.
-		jQuery(CAL_DIV).fullCalendar('removeEvents', calEvent["id"]);
-		// Close event editor.
-		eventDialog.dialog("close");
+	var divideSelectedTime = function(calEvent) {
+		console.log("Attempting to divide times");
 	}
 
 	// Create jquery-ui dialog for event property editing.
@@ -136,8 +135,7 @@ jQuery(document).ready(function() {
 			Save: editEvent,
 			Cancel: function() {
 				eventDialog.dialog("close");
-			},
-			Delete: removeEvent
+			}
 		},
 		open: function() {
 			jQuery(':focus', this).blur();
@@ -152,19 +150,16 @@ jQuery(document).ready(function() {
 		event.preventDefault();
 		editEvent();
 	});
-
-
-	startElt.timepicker({
+	/*startElt.timepicker({
 		controlType: 'select',
 		hourMin: 7,
 		hourMax: 20
 	});
-
 	endElt.timepicker({
 		controlType: 'select',
 		hourMin: 7,
 		hourMax: 20
-	});
+	});*/
 
 	/*
 	 * Handle clicks on existing events.
@@ -172,26 +167,35 @@ jQuery(document).ready(function() {
 	 */
 	var eventClickHandler = function(calEvent) {
 		// Select event in non-editable context, e.g. student sign up
-		if (!isEditable()) {
-			var id = calEvent.id;
-			id = id.replace("@google.com", "");
-			var eventData = {
-				mode: "select",
-				id: id,
-				source: calEvent.source.googleCalendarId
-			};
-			console.log("eventData looks like " + JSON.stringify(eventData));
-			updateCalChanges(eventData);
-		} else {
-			// Provide additional editing options.
-			// Set start and end times.
-			var startDate = calEvent.start.toDate()
-			var endDate = calEvent.end.toDate()
-			startElt.datetimepicker('setDate', startDate);
-			endElt.datetimepicker('setDate', endDate);
+		
+		var startDate = calEvent.start.toDate()
+		var endDate = calEvent.end.toDate()
+		//startElt.datetimepicker('setDate', startDate);
+		//endElt.datetimepicker('setDate', endDate);
+		if (sessionLength != 0) {
 			eventDialog.data('current-event', calEvent);
 			eventDialog.dialog("open");
 		}
+
+		return false;
+		var id = calEvent.id;
+		id = id.replace("@google.com", "");
+		var eventData = {
+			mode: "select",
+			id: id,
+			source: calEvent.source.googleCalendarId
+		};
+		console.log("eventData looks like " + JSON.stringify(eventData));
+		updateCalChanges(eventData);
+
+		// Provide additional editing options.
+		// Set start and end times.
+		/*var startDate = calEvent.start.toDate()
+		var endDate = calEvent.end.toDate()
+		startElt.datetimepicker('setDate', startDate);
+		endElt.datetimepicker('setDate', endDate);
+		eventDialog.data('current-event', calEvent);
+		eventDialog.dialog("open");*/
 		return false;
 	}
 
@@ -273,7 +277,7 @@ jQuery(document).ready(function() {
 
 	var getVariableCalendarIds = function() {
 		var eventSources = [];
-		var source = "#<?php echo $new_email; ?>_1";
+		var source = "#<?php echo $calendar_ids; ?>_1";
 		var data = jQuery(source).val();
 		if (data == "" || data == null || data == false) {
 			return eventSources;
@@ -304,8 +308,15 @@ jQuery(document).ready(function() {
 		jQuery(CAL_DIV).fullCalendar('refetchEvents');
 	}
 
-	var filter = "#<?php echo $new_email; ?>_1";
+
+	var filter = "#<?php echo $calendar_ids; ?>_1";
 	jQuery(filter).change(setCalendarIds);
+
+	var lengths = "#<?php echo $session_length; ?>_1";
+	jQuery(lengths).change(function() {
+		sessionLength = jQuery(this).val();
+		console.log(sessionLength);
+	});
 
 	// Create FullCalendar element.
 	jQuery(CAL_DIV).fullCalendar({

@@ -2,12 +2,12 @@
 	require_once(realpath('../../../wp-load.php'));
 	//{filter_by:"wts_subject.id", filter_id: this.value, whichpod: "wts_course"};
 	header("Content-Type: text/json");
-	$filter_by = $_GET['filter_by'];
+	$filter_by = $_POST['filter_by'];
 	//$filter_id = strtolower($_GET['filter_id']);
-	$filter_id = $_GET['filter_id'];
-	$whichpod = $_GET['whichpod'];
-	$extra_fields = explode(",", $_GET['extra_fields']);
-	$extra_where = str_replace("\\", "", Caldera_Forms::do_magic_tags($_GET['extra_where']));
+	$filter_id = $_POST['filter_id'];
+	$whichpod = $_POST['whichpod'];
+	$extra_fields = explode(",", $_POST['extra_fields']);
+	$extra_where = str_replace("\\", "", Caldera_Forms::do_magic_tags($_POST['extra_where']));
 
 
 	$querystring = "";
@@ -35,7 +35,7 @@
 		$name_field = "display_name";
 	}
 
-
+	//cycle through every pod that matches the filter
 	while ($mypod->fetch()) {
 		$nextpod = array(
 			"id" => $mypod->field($id_field), 
@@ -52,6 +52,7 @@
 					if (is_array($field_value)) {
 						$return_arr = array();
 						foreach($field_value as $item) {
+							//var_dump($field_value);
 							//post-type or user
 							if (array_key_exists('post_title', $item)) {
 								array_push($return_arr, array("id" => $item['post_name'], "name" => $item['post_title']));

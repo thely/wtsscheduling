@@ -21,17 +21,18 @@
 		<input type="text" id="{{_id}}_api_key" class="block-input field-config magic-tag-enabled required" name="{{_name}}[api_key]" value="{{api_key}}">
 	</div>
 </div>
+
 <div class="caldera-config-group">
-	<label for="{{_id}}_cal_id">Calendar ID</label>
+	<label>Calendar ID(s)</label>
 	<div class="caldera-config-field">
-		<input type="text" id="{{_id}}_cal_id" class="block-input field-config magic-tag-enabled required" name="{{_name}}[cal_id]" value="{{cal_id}}">
-		<?php /*{{{_field slug="cal_id" exclude="system"}}}		*/ ?>
+		{{{_field slug="calendar_ids"}}}
 	</div>
 </div>
+
 <div class="caldera-config-group">
-	<label>Calendar ID (new)</label>
+	<label>Divide selection by session type</label>
 	<div class="caldera-config-field">
-		{{{_field slug="new_email"}}}
+		{{{_field slug="session_length"}}}
 	</div>
 </div>
 
