@@ -27,15 +27,9 @@ if (!function_exists('getConfigAsBool')) {
 <div id="event-dialog-<?php echo $field_id; ?>" title="Edit Event">
   <p class="validateTips">Select a timeslot.</p>
  
-  <form role="form">
+  <form role="form" id="event-dialog-<?php echo $field_id; ?>-form">
     <fieldset>
-
-
-      <p>Or, enter your own:</p>
-      <label for="event-start">Start</label>
-      <input name="event-start" class="event-start" />
-      <label for="event-end">End</label>
-      <input name="event-end" class="event-end" />
+      <div id="event-dialog-<?php echo $field_id; ?>-timeselect"></div>
       
       <!-- Allow form submission with keyboard without duplicating the dialog button -->
       <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
@@ -78,6 +72,9 @@ jQuery(document).ready(function() {
 			calChanges['events'][newEvent['id']] = newEvent;
 			calChanges['calendar_id'] = calChanges['events'][newEvent['id']]['source'];
 		}
+		else if (newEvent['mode'] == "select_split") {
+			calChanges = newEvent;
+		}
 		console.log(JSON.stringify(calChanges));
 		updateFieldValue();
 	}
@@ -101,28 +98,60 @@ jQuery(document).ready(function() {
 	//var endElt = jQuery(MODAL_DIV + ' .event-end');
 	//-var endElt = $(MODAL_DIV + ' .event-start');
 
+	var lengths = "#<?php echo $session_length; ?>_1";
+	sessionLength = jQuery(lengths).val();
+	jQuery(lengths).change(function() {
+		sessionLength = jQuery(this).val();
+		console.log(sessionLength);
+	});
+
+
+	var divideSelectedTime = function() {
+		var calEvent = eventDialog.data('current-event');
+		var selectors = "#event-dialog-<?php echo $field_id; ?>-timeselect";
+		jQuery(selectors).empty();
+		var startTime = moment(calEvent.start);
+		var endTime = moment(calEvent.end);
+		var splitEventData = {};
+		//splitEventData['original'] = calEvent.id;
+		var formatting = 'YYYY-MM-DD[T]HH:mm:ss';
+		var index = 0;
+		while (moment.duration(endTime.diff(startTime)).asMinutes() >= sessionLength) {
+			//Make a new end time, as a clone of the start time
+			var startClone = startTime.clone();
+			startClone.add(sessionLength, 'minutes');
+			//Add time information to .data()
+			splitEventData[index] = {};
+			splitEventData[index]['start'] = startTime.format(formatting);
+			splitEventData[index]['end'] = startClone.format(formatting);
+			var range = startTime.format("h:mm a") + " - " + startClone.format("h:mm a");
+			jQuery(selectors).append("<div style='display:block;'><input type='radio' name='" 
+					+ calEvent.id + "' value='temp" + index + "' />" + range + "</div>");
+			startTime.add(sessionLength, 'minutes');
+			index++;
+		}
+		eventDialog.data('splitEventData', splitEventData);
+		console.log(splitEventData);
+	}
+
 	// Called by modal to update selected event.
 	var editEvent = function() {
 		var calEvent = eventDialog.data('current-event');
+		var splitData = eventDialog.data('splitEventData');
 		eventDialog.data('current-event', null);
-		//var startTime = startElt.datetimepicker('getDate');
-		//var endTime = endElt.datetimepicker('getDate');
-		//  Update event with new times.
-		//calEvent.start.hour(startTime.getHours());
-		//calEvent.start.minutes(startTime.getMinutes());
-		//calEvent.end.hour(endTime.getHours());
-		//calEvent.end.minutes(endTime.getMinutes());
-		// Update field data.
-		updateCalChanges(calEvent);
+		var index = jQuery("input[name="+calEvent.id+"]:checked", "#event-dialog-<?php echo $field_id; ?>-form").val();
+		var newEvent = {};
+		newEvent['mode'] = "select_split";
+		newEvent['events'] = splitData;
+		newEvent['original'] = calEvent.id;
+		newEvent['selected'] = index;
+
+		updateCalChanges(newEvent);
 		// Update calendar display.
-		jQuery(CAL_DIV).fullCalendar('updateEvent', calEvent);
+		//jQuery(CAL_DIV).fullCalendar('updateEvent', calEvent);
 		// Close event editor.
 		eventDialog.dialog("close");
 		return false;
-	}
-
-	var divideSelectedTime = function(calEvent) {
-		console.log("Attempting to divide times");
 	}
 
 	// Create jquery-ui dialog for event property editing.
@@ -138,7 +167,9 @@ jQuery(document).ready(function() {
 			}
 		},
 		open: function() {
+			divideSelectedTime();
 			jQuery(':focus', this).blur();
+			return false;
 		},
 		close: function() {
 			//formElt[0].reset();
@@ -166,28 +197,24 @@ jQuery(document).ready(function() {
 	 * @param	calEvent	{Event Object}	the event clicked.
 	 */
 	var eventClickHandler = function(calEvent) {
-		// Select event in non-editable context, e.g. student sign up
-		
-		var startDate = calEvent.start.toDate()
-		var endDate = calEvent.end.toDate()
-		//startElt.datetimepicker('setDate', startDate);
-		//endElt.datetimepicker('setDate', endDate);
-		if (sessionLength != 0) {
+		//Only open the dialog if the time period is greater than the session length
+		var dur = moment.duration(moment(calEvent.end).diff(moment(calEvent.start)));
+		if (sessionLength != 0 && dur.asMinutes() > sessionLength) {
 			eventDialog.data('current-event', calEvent);
 			eventDialog.dialog("open");
 		}
-
-		return false;
-		var id = calEvent.id;
-		id = id.replace("@google.com", "");
-		var eventData = {
-			mode: "select",
-			id: id,
-			source: calEvent.source.googleCalendarId
-		};
-		console.log("eventData looks like " + JSON.stringify(eventData));
-		updateCalChanges(eventData);
-
+		//Selecting a time period that matches the session length
+		else {
+			var id = calEvent.id;
+			id = id.replace("@google.com", "");
+			var eventData = {
+				mode: "select",
+				id: id,
+				source: calEvent.source.googleCalendarId
+			};
+			console.log("eventData looks like " + JSON.stringify(eventData));
+			updateCalChanges(eventData);
+		}
 		// Provide additional editing options.
 		// Set start and end times.
 		/*var startDate = calEvent.start.toDate()
@@ -311,12 +338,6 @@ jQuery(document).ready(function() {
 
 	var filter = "#<?php echo $calendar_ids; ?>_1";
 	jQuery(filter).change(setCalendarIds);
-
-	var lengths = "#<?php echo $session_length; ?>_1";
-	jQuery(lengths).change(function() {
-		sessionLength = jQuery(this).val();
-		console.log(sessionLength);
-	});
 
 	// Create FullCalendar element.
 	jQuery(CAL_DIV).fullCalendar({
