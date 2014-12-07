@@ -141,14 +141,20 @@ ScheduleCalendar.prototype.event_drop_handler = function(event, delta, revertFun
   var eventData = {
     mode: "update",
     id: event.id,
-    start: event.start.format(),
-    end: event.end.format(),
+    start: moment(event.start.format()),
+    end: moment(event.end.format()),
     calendar_id: event['calendar_id']
   };
   if ("tempId" in event) {
     eventData['tempId'] = event.tempId;
   }
-  this.update_changes(eventData);
+  var in_bounds = this.check_event_time(eventData);
+  if (!in_bounds) {
+    alert("Event is outside allowed times!");
+    revertFunc();
+  } else {
+    this.update_changes(eventData);
+  }
 }
 
 ScheduleCalendar.prototype.event_resize_handler = function(event, delta, revertFunc) {
@@ -261,33 +267,36 @@ ScheduleCalendar.prototype.update = function(event, changes) {
   changes.id = event.id;
 
   // Change changes dates to have same day as event.
-  changes.start = moment(changes.start)
-    .date(event.start.date())
-    .month(event.start.month())
-    .year(event.start.year());
-  changes.end = moment(changes.end)
-    .date(event.end.date())
-    .month(event.end.month())
-    .year(event.end.year());
+  changes.start = moment(event.start)
+    .hour(changes.start.hour())
+    .minute(changes.start.minute());
+  changes.end = moment(event.end)
+    .hour(changes.end.hour())
+    .minute(changes.end.minute());
 
   // Check overlap.
   var overlap = this.check_event_overlap(changes);
-
-  if (!overlap) {
-    //  Update event with new times.
-    event.start.hour(changes.start.hours());
-    event.start.minutes(changes.start.minutes());
-    event.end.hour(changes.end.hours());
-    event.end.minutes(changes.end.minutes());
-    event['calendar_id'] = this.calendars_by_center[changes.center];
-
-    this.update_changes(event);
-    this.calendar.fullCalendar('updateEvent', event);
-    return true;
-  } else {
+  if (overlap) {
     alert("Overlapping events not allowed!");
     return false;
   }
+
+  var in_bounds = this.check_event_time(changes);
+  if (!in_bounds) {
+    alert("Event is outside allowed times!");
+    return false;
+  }
+
+  //  Update event with new times.
+  event.start.hour(changes.start.hours());
+  event.start.minutes(changes.start.minutes());
+  event.end.hour(changes.end.hours());
+  event.end.minutes(changes.end.minutes());
+  event['calendar_id'] = this.calendars_by_center[changes.center];
+
+  this.update_changes(event);
+  this.calendar.fullCalendar('updateEvent', event);
+  return true;
 }
 
 /*
@@ -317,8 +326,11 @@ ScheduleCalendar.prototype.check_event_overlap = function(event) {
  * Ensure provided event-like object falls within the allowed time for
  * events.
  */
-ScheduleCalendar.prototype.check_event_time = function(first_argument) {
-  // body...
+ScheduleCalendar.prototype.check_event_time = function(event) {
+  var event_start = moment(this.start_time).hour(event.start.hour()).minute(event.start.minute()).toDate();
+  var event_end = moment(this.end_time).hour(event.end.hour()).minute(event.end.minute()).toDate();
+
+  return (event_start >= this.start_time.toDate() && event_end <= this.end_time.toDate());
 };
 
 /*

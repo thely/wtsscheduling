@@ -103,8 +103,8 @@ EventModal.prototype.save = function() {
   this.dialog.data('new-event', null);
 
   var changes = {
-    start: this.start_picker.datetimepicker('getDate'),
-    end: this.end_picker.datetimepicker('getDate'),
+    start: moment(this.start_picker.datetimepicker('getDate')),
+    end: moment(this.end_picker.datetimepicker('getDate')),
     center: this.dialog.find("input[type='radio']:checked").val()
   };
 
@@ -113,10 +113,10 @@ EventModal.prototype.save = function() {
   // Update calendar display if new.
   if (new_event) {
     //  Update event with new times.
-    event.start.hour(changes.start.getHours());
-    event.start.minutes(changes.start.getMinutes());
-    event.end.hour(changes.end.getHours());
-    event.end.minutes(changes.end.getMinutes());
+    event.start.hour(changes.start.hour());
+    event.start.minutes(changes.start.minutes());
+    event.end.hour(changes.end.hour());
+    event.end.minutes(changes.end.minutes());
     event['calendar_id'] = this.calendars_by_center[changes.center];
     this.calendar.add(event);
   } else {
