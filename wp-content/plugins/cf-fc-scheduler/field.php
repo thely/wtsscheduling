@@ -100,5 +100,7 @@ jQuery(document).ready(function() {
 		calendar_info);
 
 	calendar.init(modal);
+	// This is so the field always looks the same if there are no changes.
+	calendar.update_field();
 });
 </script>
