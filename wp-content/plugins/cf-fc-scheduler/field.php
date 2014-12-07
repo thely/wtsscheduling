@@ -71,6 +71,12 @@ jQuery(document).ready(function() {
 	// API Key for call to Google Calendar.
 	var google_calendar_api_key = "<?php echo $field['config']['api_key']; ?>";
 
+	// Default earliest time a shift can be scheduled.
+	var schedule_lower_bound = moment().hour(7).minute(0).second(0);
+
+	// Default latest time a shift can be scheduled.
+	var schedule_upper_bound = moment().hour(20).minute(0).second(0);
+
 	// Permissions set in field configuration.
 	var permissions = {
 		editable: <?php echo getConfigAsBool('editable', $field); ?>,
@@ -80,11 +86,18 @@ jQuery(document).ready(function() {
 		daily_view: <?php echo getConfigAsBool('daily', $field); ?>
 	};
 
-	var calendar = new ScheduleCalendar(CAL_ID, field_name,
-		google_calendar_api_key, calendar_info);
+	var calendar = new ScheduleCalendar(CAL_ID,
+		field_name,
+		google_calendar_api_key,
+		schedule_lower_bound,
+		schedule_upper_bound,
+		calendar_info);
 	calendar.set_permissions(permissions);
 
-	var modal = new EventModal(MODAL_ID, calendar_info);
+	var modal = new EventModal(MODAL_ID,
+		schedule_lower_bound,
+		schedule_upper_bound,
+		calendar_info);
 
 	calendar.init(modal);
 });

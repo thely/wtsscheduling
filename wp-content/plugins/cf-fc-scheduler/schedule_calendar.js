@@ -9,13 +9,20 @@
  * will be sent on form submission.
  * @param  gcal_api_key  {string}  the api key to use in the call to
  * Google Calendar.
+ * @param  start_time  {moment}  the earliest allowed start time for
+ * an event on a given day.
+ * @param  end_time  {moment}  the latest allowed end time for an
+ * event on a given day.
  * @param  calendar_info  {array}  associated Google Calendar information
  * as retrieved from the bound pods field.
  */
-var ScheduleCalendar = function(element_id, element_name, gcal_api_key, calendar_info) {
+var ScheduleCalendar = function(element_id, element_name, gcal_api_key,
+  start_time, end_time, calendar_info) {
   this.id = element_id;
   this.name = element_name;
   this.calendar = jQuery('#' + this.id);
+  this.start_time = start_time;
+  this.end_time = end_time;
 
   // Object whose state corresponds to the value of this field.
   this.changes = {};
@@ -96,8 +103,8 @@ ScheduleCalendar.prototype.init = function(modal) {
       center: "title",
       right: this.get_view_info()
     },
-    minTime: "07:00:00",
-    maxTime: "20:00:00",
+    minTime: this.start_time.format("HH:mm:ss"),
+    maxTime: this.end_time.format("HH:mm:ss"),
     timezone: "local",
     eventClick: this.event_click_handler.bind(this),
     eventRender: this.event_render_handler.bind(this),
@@ -304,6 +311,14 @@ ScheduleCalendar.prototype.check_event_overlap = function(event) {
     }
   }
   return false;
+};
+
+/*
+ * Ensure provided event-like object falls within the allowed time for
+ * events.
+ */
+ScheduleCalendar.prototype.check_event_time = function(first_argument) {
+  // body...
 };
 
 /*

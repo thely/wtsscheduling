@@ -2,14 +2,19 @@
  * EventModal represents the event-editing pop-up window.
  * @param  element_id  {string}  the id of the element to associate
  * with the modal.
+ * @param  start_time  {moment}  the earliest time that an event can
+ * start.
+ * @param  end_time  {moment}  the latest time that an event can end.
  * @param  calendar_info  {array}  an array of objects with calendar_id
  * and center associations.
  */
-var EventModal = function(element_id, calendar_info) {
+var EventModal = function(element_id, start_time, end_time, calendar_info) {
   this.id = element_id;
   this.dialog = jQuery('#' + this.id);
   this.start_picker = jQuery('.event-start', this.dialog);
   this.end_picker = jQuery('.event-end', this.dialog);
+  this.start_time = start_time;
+  this.end_time = end_time;
   this.setup_calendar_info(calendar_info);
 }
 
@@ -61,14 +66,14 @@ EventModal.prototype.init = function(calendar) {
   // Set up time pickers on modal dialog form.
   this.start_picker.timepicker({
     controlType: 'select',
-    hourMin: 7,
-    hourMax: 20
+    hourMin: parseInt(this.start_time.format("H")),
+    hourMax: parseInt(this.end_time.format("H"))
   });
 
   this.end_picker.timepicker({
     controlType: 'select',
-    hourMin: 7,
-    hourMax: 20
+    hourMin: parseInt(this.start_time.format("H")),
+    hourMax: parseInt(this.end_time.format("H"))
   });
 
   // Add centers as radio inputs to dialog.
