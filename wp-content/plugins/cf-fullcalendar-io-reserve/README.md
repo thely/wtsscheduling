@@ -1,5 +1,9 @@
 # FullCalendar field plugin
 
+### Requirements
+
+To successfully handle time segmentation, you must have a field defining the session lengths, with its options set so that the values of each option are the lengths of a given session, i.e. an option of "Video Review" would have the value 15. Chain the fields so that the calendar displays *after* the session types dropdown is not empty.
+
 ### Getting the calendar functional
 
 #### To get calendar info to view on FullCalendar, you'll need to do the following:

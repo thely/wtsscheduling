@@ -130,6 +130,11 @@ jQuery(document).ready(function() {
 			startTime.add(sessionLength, 'minutes');
 			index++;
 		}
+		if (moment.duration(endTime.diff(startTime)).asMinutes() > 0) {
+			splitEventData[index] = {};
+			splitEventData[index]['start'] = startTime.format(formatting);
+			splitEventData[index]['end'] = endTime.format(formatting);
+		}
 		eventDialog.data('splitEventData', splitEventData);
 		console.log(splitEventData);
 	}
@@ -146,6 +151,7 @@ jQuery(document).ready(function() {
 		newEvent['original'] = calEvent.id;
 		newEvent['selected'] = index;
 		newEvent['events'] = mergeUnselectedEvents(newEvent['events'], index, Object.keys(newEvent['events']).length-1);
+		newEvent['calendar_id'] = calEvent.source['googleCalendarId'];
 
 		updateCalChanges(newEvent);
 		// Update calendar display.
