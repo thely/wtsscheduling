@@ -134,52 +134,101 @@ class Reservation_Processor {
 		$event_mode = $selected_event_details['mode'];
 
 		$selected_events = $selected_event_details['events'];
-		$event_ids = array_map(function($event_info) {
-			return $event_info['id'];
-		}, array_values($selected_events));
 
 		// Set GCal information and require necessary files.
 		$service = $transdata['gcal_service'];
 		require_once($transdata['gcal_require']);
 
-		// Get events from GCal.
-		$cal_events = array_map(function($event_id) use (&$service, $calendar_id) {
-			return $service->events->get($calendar_id, $event_id);
-		}, $event_ids);
+		//A longer event has been split by the modal, and new events need to be added to fit.
+		if ($event_mode == "select_split") {
+			$event_id = $selected_event_details['original'];
+			$selected_index = $selected_event_details['selected'];
 
-		// Set events as reserved.
-		foreach($cal_events as $event) { 
-			$extended_properties = $event->getExtendedProperties();
-			if ($extended_properties == null) {
-				$this->echo_error("That event can't be selected.");
-				return array("error-cause" => "incorrect event type");
-			}
-			$private_props = $extended_properties->getPrivate();
-			if ($private_props['is_reserved'] == "true") {
-				$this->echo_error("This time is already reserved.");
-				return array("error-cause" => "selected reserved time");
-			}
-			else {
-				$private_props['is_reserved'] = "true";
-				$oldSummary = $event->getSummary();
-				$oldDescription = $event->getDescription();
-				$private_props['original_summary'] = $oldSummary;
-				$private_props['original_description'] = $oldDescription;
-				$private_props['student_email'] = $student_email;
-				$private_props['student_name'] = $student_name;
+			//The selected event takes on the event_id of the larger event, while surrounding blocks
+			//are added as new events.
+			$event = $service->events->get($calendar_id, $event_id);
+			//For setting the extended_properties of the "new" events
+
+			foreach ($selected_events as $key => $value) {
+				if ($key != $selected_index) {
+					$newEvent = new Google_Service_Calendar_Event();
+					
+					$newEvent->setSummary($event->getSummary());
+					$newEvent->setDescription($event->getDescription());
+					$newEvent->setStart($this->make_time($value['start']));
+					$newEvent->setEnd($this->make_time($value['end']));
+					$newEvent->setAttendees($event->getAttendees());
+
+					$extendedProperties = new Google_Service_Calendar_EventExtendedProperties();
+					$extendedProperties->setPrivate($event->getExtendedProperties()->getPrivate());
+					$extendedProperties->setShared(array());
+					$newEvent->setExtendedProperties($extendedProperties);
 				
-				$event->setSummary("[RESERVED], " . $oldSummary);
-				$event->setDescription($oldDescription . "Reserved by $student_email.");
-				$extended_properties->setPrivate(array_merge(array("student_email" => $student_email), $private_props));
-				$event->setExtendedProperties($extended_properties);
-				$event->setAttendees($this->add_attendee($student_email, $event));
+					$createdEvent = $service->events->insert($calendar_id, $newEvent);
+				}
+			}
+			//Setting the time of the selected event
+			$event->setStart($this->make_time($selected_events[$selected_index]['start']));
+			$event->setEnd($this->make_time($selected_events[$selected_index]['end']));
 
-				$newEvent = $service->events->update($calendar_id, $event->getId(), $event);
+			$updated_event = $this->update_event($event, $student_email, $student_name);
+			$sent_event = $service->events->update($calendar_id, $updated_event->getId(), $updated_event);
+			$return_meta = $this->generate_email($updated_event, [$sent_event->getId()]);
+			
+			return $return_meta;
+
+			//$newEvent = $service->events->update($calendar_id, $event->getId(), $event);
+		}
+		else if ($event_mode == "select") {
+			$event_ids = array_map(function($event_info) {
+				return $event_info['id'];
+			}, array_values($selected_events));
+
+			// Get events from GCal.
+			$cal_events = array_map(function($event_id) use (&$service, $calendar_id) {
+				return $service->events->get($calendar_id, $event_id);
+			}, $event_ids);
+
+			// Set events as reserved.
+			foreach($cal_events as $event) { 
+				$newEvent = $this->update_event($event);
+				$return_meta = $this->generate_email($newEvent, $event_ids);
+				return $return_meta;
 			}
 		}
+	}
 
-		/* EMAIL AND CONFIRMATION TEXT FORMATTING */
+	private function update_event(&$event, $student_email, $student_name) {
+		$extended_properties = $event->getExtendedProperties();
+		if ($extended_properties == null) {
+			$this->echo_error("That event can't be selected.");
+			return array("error-cause" => "incorrect event type");
+		}
+		$private_props = $extended_properties->getPrivate();
+		if ($private_props['is_reserved'] == "true") {
+			$this->echo_error("This time is already reserved.");
+			return array("error-cause" => "selected reserved time");
+		}
+		else {
+			$private_props['is_reserved'] = "true";
+			$oldSummary = $event->getSummary();
+			$oldDescription = $event->getDescription();
+			$private_props['original_summary'] = $oldSummary;
+			$private_props['original_description'] = $oldDescription;
+			$private_props['student_email'] = $student_email;
+			$private_props['student_name'] = $student_name;
+			
+			$event->setSummary("[RESERVED], " . $oldSummary);
+			$event->setDescription($oldDescription . "Reserved by $student_email.");
+			$extended_properties->setPrivate(array_merge(array("student_email" => $student_email), $private_props));
+			$event->setExtendedProperties($extended_properties);
+			$event->setAttendees($this->add_attendee($student_email, $event));
 
+			return $event;
+		}
+	}
+
+	private function generate_email(&$event_in, $event_ids) {
 		$event_info = array_map(function($event) {
 			$info = array();
 			$private_props = $event->getExtendedProperties()->getPrivate();
@@ -188,7 +237,7 @@ class Reservation_Processor {
 			$info['start'] = new DateTime($event->getStart()->getDateTime());
 			$info['end'] = new DateTime($event->getEnd()->getDateTime());
 			return $info;
-		}, $cal_events);
+		}, array($event_in));
 		
 		$info_event_props = $event_info[0];
 		// Assumes the same tutor and tutor email for all events.
@@ -260,7 +309,6 @@ class Reservation_Processor {
 			$confirmation_message_footer
 		));
 
-		// This example will return the users input and the date in the defined tags
 		$return_meta = array(
 			'student_email_output'		=>	$student_email_output,
 			'tutor_email_output'		=>	$tutor_email_output,
