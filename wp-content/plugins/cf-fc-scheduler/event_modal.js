@@ -91,28 +91,31 @@ EventModal.prototype.init = function(calendar) {
 // TODO: Check for overlap caused by editing of event, or for
 // the time of the event to go outside of the allowed times.
 EventModal.prototype.save = function() {
-  var calEvent = this.dialog.data('current-event');
+  var event = this.dialog.data('current-event');
   var new_event = this.dialog.data('new-event');
 
   this.dialog.data('current-event', null);
   this.dialog.data('new-event', null);
 
-  var startTime = this.start_picker.datetimepicker('getDate');
-  var endTime = this.end_picker.datetimepicker('getDate');
-  var center_selected = this.dialog.find("input[type='radio']:checked").val();
+  var changes = {
+    start: this.start_picker.datetimepicker('getDate'),
+    end: this.end_picker.datetimepicker('getDate'),
+    center: this.dialog.find("input[type='radio']:checked").val()
+  };
 
-  //  Update event with new times.
-  calEvent.start.hour(startTime.getHours());
-  calEvent.start.minutes(startTime.getMinutes());
-  calEvent.end.hour(endTime.getHours());
-  calEvent.end.minutes(endTime.getMinutes());
-  calEvent['calendar_id'] = this.calendars_by_center[center_selected];
+  
 
   // Update calendar display if new.
   if (new_event) {
-    this.calendar.add(calEvent);
+    //  Update event with new times.
+    event.start.hour(changes.start.getHours());
+    event.start.minutes(changes.start.getMinutes());
+    event.end.hour(changes.end.getHours());
+    event.end.minutes(changes.end.getMinutes());
+    event['calendar_id'] = this.calendars_by_center[changes.center];
+    this.calendar.add(event);
   } else {
-    this.calendar.update(calEvent);
+    this.calendar.update(event, changes);
   }
 
   // Close event editor.

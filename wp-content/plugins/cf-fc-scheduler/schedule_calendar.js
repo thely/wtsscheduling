@@ -1,7 +1,7 @@
 /*
  * To use, make a new schedule calendar object, passing in all required
- * parameters, add view information, then call init to initialize the
- * calendar.
+ * parameters, add permissions with the set_permissions function, then
+ * call init with the modal object to initialize the calendar itself.
  *
  * @param  element_id  {string}  the id of the element to use for the
  * calendar display.
@@ -216,7 +216,7 @@ ScheduleCalendar.prototype.check_event_properties = function(event) {
       } else { return false; }
     } else { return false; }
   } else { return false; }
-};
+}
 
 ScheduleCalendar.prototype.set_view = function(view_info) {
   this.view_info = view_info;
@@ -240,11 +240,71 @@ ScheduleCalendar.prototype.add = function(event) {
   this.tempId++;
 }
 
-// Update passed event.
-ScheduleCalendar.prototype.update = function(event) {
-  this.update_changes(event);
-  this.calendar.fullCalendar('updateEvent', event);
+/*
+ * Takes an event and changes, checks that the changes are valid in the
+ * context of the other calendar events and time constraints on the
+ * calendar, and applies the changes if they are accepted. `changes` is
+ * an event-like object possessing `start`, `end`, and (optionally)
+ * `center` properties.
+ * @returns  boolean  true if the event was updated successfully, false
+ * otherwise.
+ */
+ScheduleCalendar.prototype.update = function(event, changes) {
+  // Set id of changes so checks ignore event to be updated.
+  changes.id = event.id;
+
+  // Change changes dates to have same day as event.
+  changes.start = moment(changes.start)
+    .date(event.start.date())
+    .month(event.start.month())
+    .year(event.start.year());
+  changes.end = moment(changes.end)
+    .date(event.end.date())
+    .month(event.end.month())
+    .year(event.end.year());
+
+  // Check overlap.
+  var overlap = this.check_event_overlap(changes);
+
+  if (!overlap) {
+    //  Update event with new times.
+    event.start.hour(changes.start.hours());
+    event.start.minutes(changes.start.minutes());
+    event.end.hour(changes.end.hours());
+    event.end.minutes(changes.end.minutes());
+    event['calendar_id'] = this.calendars_by_center[changes.center];
+
+    this.update_changes(event);
+    this.calendar.fullCalendar('updateEvent', event);
+    return true;
+  } else {
+    alert("Overlapping events not allowed!");
+    return false;
+  }
 }
+
+/*
+ * Ensure provided event-like object does not overlap any other events,
+ * returning true if so, false otherwise. See `update` for a description
+ * of the event-like object.
+ * From: http://stackoverflow.com/a/8796793/1698058
+ */
+ScheduleCalendar.prototype.check_event_overlap = function(event) {
+  var events = this.calendar.fullCalendar('clientEvents');
+  var start = event.start.toDate();
+  var end = event.end.toDate();
+  for (i in events) {
+    if (events[i].id != event.id) {
+      var event_start = events[i].start.toDate();
+      var event_end = events[i].end.toDate();
+      if (!(event_start >= end ||
+          event_end <= start)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
 
 /*
  * Adds or reconciles event with the existing changes made using the
