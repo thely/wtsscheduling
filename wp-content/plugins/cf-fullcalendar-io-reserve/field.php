@@ -126,7 +126,7 @@ jQuery(document).ready(function() {
 			splitEventData[index]['end'] = startClone.format(formatting);
 			var range = startTime.format("h:mm a") + " - " + startClone.format("h:mm a");
 			jQuery(selectors).append("<div style='display:block;'><input type='radio' name='" 
-					+ calEvent.id + "' value='temp" + index + "' />" + range + "</div>");
+					+ calEvent.id + "' value='" + index + "' />" + range + "</div>");
 			startTime.add(sessionLength, 'minutes');
 			index++;
 		}
@@ -134,7 +134,7 @@ jQuery(document).ready(function() {
 		console.log(splitEventData);
 	}
 
-	// Called by modal to update selected event.
+	// Called by modal to create the return
 	var editEvent = function() {
 		var calEvent = eventDialog.data('current-event');
 		var splitData = eventDialog.data('splitEventData');
@@ -145,6 +145,7 @@ jQuery(document).ready(function() {
 		newEvent['events'] = splitData;
 		newEvent['original'] = calEvent.id;
 		newEvent['selected'] = index;
+		newEvent['events'] = mergeUnselectedEvents(newEvent['events'], index, Object.keys(newEvent['events']).length-1);
 
 		updateCalChanges(newEvent);
 		// Update calendar display.
@@ -152,6 +153,32 @@ jQuery(document).ready(function() {
 		// Close event editor.
 		eventDialog.dialog("close");
 		return false;
+	}
+
+	//Recursively merge unselected events for inserting larger chunks of time into GCal
+	var mergeUnselectedEvents = function(events, selected, key) {
+		if (key == 0) {
+			return events;
+		}
+		else if (key-1 in events) {
+			if (events[key]['start'] == events[key-1]['end'] && 
+					key != selected && key-1 != selected) {
+				events[key]['start'] = events[key-1]['start'];
+				delete events[key-1];
+				if (key-2 in events) {
+					//console.log(events);
+					return mergeUnselectedEvents(events, selected, key-2);
+				}
+				else {
+					//console.log(events);
+					return events;
+				}
+			}
+			else {
+				//console.log(events);
+				return mergeUnselectedEvents(events, selected, key-1);
+			}
+		}
 	}
 
 	// Create jquery-ui dialog for event property editing.
