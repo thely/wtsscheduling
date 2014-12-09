@@ -138,8 +138,15 @@ class Cancellation_Processor {
 		// the same information for student, student email, tutor, and tutor email.
 		$info_event = $cal_events[0];
 		$info_event_props = $info_event->getExtendedProperties()->getPrivate();
-		$tutor_email = $info_event_props['tutor_email'];
-		$tutor_name = $info_event_props['tutor_name'];
+		$tutor_id = $info_event_props['tutor_id'];
+		$pod = pods('user', $tutor_id);
+		if ($pod->exists()) {
+			$tutor_email = $pod->display('user_email');
+			$tutor_name = $pod->display('display_name');
+		} else {
+			echo_error("Selected event not compatible!");
+			die;
+		}
 		$student_name = $info_event_props['student_name'];
 		$student_email = $info_event_props['student_email'];
 
