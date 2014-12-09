@@ -129,6 +129,7 @@ class Reservation_Processor {
 		$cancellation_rel_path = Caldera_forms::do_magic_tags($config['cancellation_path']);
 		// Combined.
 		$cancellation_path = $site_url.'/'.$cancellation_rel_path;
+		$calendar_id = ""; //set in the future
 
 		// Get JSON information from calendar field.
 		$selected_event_details = json_decode(urldecode($encoded_event_info), true);
@@ -138,7 +139,11 @@ class Reservation_Processor {
 		// Assumes all selected events have the same calendar id.
 		if ($selected_events && count(array_values($selected_events)) > 0) {
 			$calendar_id = array_values($selected_events)[0]['source'];
-		} else {
+			if ($calendar_id == "" || $calendar_id == null) {
+				$calendar_id = $selected_event_details['calendar_id'];
+			}
+		} 
+		else {
 			$this->echo_error("You must select at least one session!");
 			die;
 		}
@@ -180,16 +185,16 @@ class Reservation_Processor {
 			$event->setEnd($this->make_time($selected_events[$selected_index]['end']));
 
 			$this->update_event($event, $student_email, $student_name);
-			$send_event = $service->events->update($calendar_id, $event->getId(), $event);
+			$sent_event = $service->events->update($calendar_id, $event->getId(), $event);
 			$return_meta = $this->generate_email(
-				$updated_event,
+				$sent_event,
 				[$sent_event->getId()],
 				$cancellation_path,
 				$student_email,
 				$student_name,
 				$calendar_id
 			);
-			
+		
 			return $return_meta;
 
 			//$newEvent = $service->events->update($calendar_id, $event->getId(), $event);
@@ -258,7 +263,7 @@ class Reservation_Processor {
 			$info['start'] = new DateTime($event->getStart()->getDateTime());
 			$info['end'] = new DateTime($event->getEnd()->getDateTime());
 			return $info;
-		}, $event_in);
+		}, array($event_in));
 		
 		$info_event_props = $event_info[0];
 		// Assumes the same tutor and tutor email for all events.
