@@ -126,14 +126,22 @@ class Reservation_Processor {
 		$student_name = Caldera_forms::do_magic_tags($config['student_name']);
 		$encoded_event_info = Caldera_forms::do_magic_tags($config['event_details']);
 		$site_url = Caldera_forms::do_magic_tags($config['site_url']);
-		$cancellation_path = Caldera_forms::do_magic_tags($config['cancellation_path']);
+		$cancellation_rel_path = Caldera_forms::do_magic_tags($config['cancellation_path']);
+		// Combined.
+		$cancellation_path = $site_url.'/'.$cancellation_rel_path;
 
 		// Get JSON information from calendar field.
 		$selected_event_details = json_decode(urldecode($encoded_event_info), true);
-		$calendar_id = $selected_event_details['calendar_id'];
 		$event_mode = $selected_event_details['mode'];
 
 		$selected_events = $selected_event_details['events'];
+		// Assumes all selected events have the same calendar id.
+		if ($selected_events && count(array_values($selected_events)) > 0) {
+			$calendar_id = array_values($selected_events)[0]['source'];
+		} else {
+			$this->echo_error("You must select at least one session!");
+			die;
+		}
 
 		// Set GCal information and require necessary files.
 		$service = $transdata['gcal_service'];
@@ -171,9 +179,16 @@ class Reservation_Processor {
 			$event->setStart($this->make_time($selected_events[$selected_index]['start']));
 			$event->setEnd($this->make_time($selected_events[$selected_index]['end']));
 
-			$updated_event = $this->update_event($event, $student_email, $student_name);
-			$sent_event = $service->events->update($calendar_id, $updated_event->getId(), $updated_event);
-			$return_meta = $this->generate_email($updated_event, [$sent_event->getId()]);
+			$this->update_event($event, $student_email, $student_name);
+			$send_event = $service->events->update($calendar_id, $event->getId(), $event);
+			$return_meta = $this->generate_email(
+				$updated_event,
+				[$sent_event->getId()],
+				$cancellation_path,
+				$student_email,
+				$student_name,
+				$calendar_id
+			);
 			
 			return $return_meta;
 
@@ -191,10 +206,18 @@ class Reservation_Processor {
 
 			// Set events as reserved.
 			foreach($cal_events as $event) { 
-				$newEvent = $this->update_event($event, $student_email, $student_name);
-				$return_meta = $this->generate_email($newEvent, $event_ids);
-				return $return_meta;
+				$this->update_event($event, $student_email, $student_name);
+				$service->events->update($calendar_id, $event->getId(), $event);
 			}
+			$return_meta = $this->generate_email(
+				$cal_events,
+				$event_ids,
+				$cancellation_path,
+				$student_email,
+				$student_name,
+				$calendar_id
+			);
+			return $return_meta;
 		}
 	}
 
@@ -223,26 +246,31 @@ class Reservation_Processor {
 			$extended_properties->setPrivate(array_merge(array("student_email" => $student_email), $private_props));
 			$event->setExtendedProperties($extended_properties);
 			$event->setAttendees($this->add_attendee($student_email, $event));
-
-			return $event;
 		}
 	}
 
-	private function generate_email(&$event_in, $event_ids) {
+	private function generate_email(&$event_in, $event_ids,
+		$cancellation_path, $student_email, $student_name, $calendar_id) {
 		$event_info = array_map(function($event) {
 			$info = array();
 			$private_props = $event->getExtendedProperties()->getPrivate();
-			$info['tutor_name'] = $private_props['tutor_name'];
-			$info['tutor_email'] = $private_props['tutor_email'];
+			$info['tutor_id'] = $private_props['tutor_id'];
 			$info['start'] = new DateTime($event->getStart()->getDateTime());
 			$info['end'] = new DateTime($event->getEnd()->getDateTime());
 			return $info;
-		}, array($event_in));
+		}, $event_in);
 		
 		$info_event_props = $event_info[0];
 		// Assumes the same tutor and tutor email for all events.
-		$tutor_email = $info_event_props['tutor_email'];//
-		$tutor_name = $info_event_props['tutor_name'];
+		$tutor_id = $info_event_props['tutor_id'];
+		$pod = pods('user', $tutor_id);
+		if ($pod->exists()) {
+			$tutor_email = $pod->display('user_email');
+			$tutor_name = $pod->display('display_name');
+		} else {
+			$this->echo_error("Selected event not compatible!");
+			die;
+		}
 		
 		$newline = "\r\n";
 		$html_newline = "<br>";
@@ -251,20 +279,20 @@ class Reservation_Processor {
 		$student_email_header = "The following " .
 			(count($event_info) > 1 ? "sessions have" : "session has") .
 			" been confirmed:";
-		$student_email_event_list = array_map(function($info) {
+		$student_email_event_list = array_map(function($info) use ($tutor_name, $tutor_email) {
 			$time_diff = $info['start']->diff($info['end']);
 			// Calculate minutes assuming events don't last more than 24 hours.
 			$minutes = $time_diff->h * 60 + $time_diff->i;
 			$info_string = $info['start']->format("g:ia") . " - " .
 				$info['end']->format("g:ia l, F j, Y") . " (" . $minutes .
-				" minutes) with " . $info['tutor_name'] . " (" .
-				$info['tutor_email'] . ")";
+				" minutes) with " . $tutor_name . " (" .
+				$tutor_email . ")";
 			return $info_string;
 		}, $event_info);
 		$student_email_body = implode($newline, $student_email_event_list);
 		// Set cancellation link.
 		$event_ids_string = implode("|", $event_ids);
-		$cancellation_link = $site_url . "/" . $cancellation_path .
+		$cancellation_link = $cancellation_path .
 			"/?event=" . $event_ids_string . "&calendar=" . $calendar_id;
 		$student_email_footer = "To cancel this reservation, visit:" .
 			$newline . $cancellation_link;
