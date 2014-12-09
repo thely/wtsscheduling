@@ -9,7 +9,6 @@
 	$extra_fields = explode(",", $_POST['extra_fields']);
 	$extra_where = str_replace("\\", "", Caldera_Forms::do_magic_tags($_POST['extra_where']));
 
-
 	$querystring = "";
 	if ($extra_where != null) {
 		$querystring = "$filter_by = '$filter_id' AND $extra_where";
@@ -26,6 +25,7 @@
 	$filtered_pods = array();
 	$id_field = ""; $name_field = "";
 	
+	//echo "THE POD IS: $whichpod";
 	if ($whichpod == "wts_course") {
 		$id_field = "post_title";
 		$name_field = "post_title";
@@ -34,6 +34,10 @@
 		$id_field = "ID";
 		$name_field = "display_name";
 	}
+	else if ($whichpod == "calendar") {
+		$id_field = "calendar_id";
+		$name_field = "tutor";
+	}
 
 	//cycle through every pod that matches the filter
 	while ($mypod->fetch()) {
@@ -41,6 +45,7 @@
 			"id" => $mypod->field($id_field), 
 			"name" => $mypod->field($name_field)
 		);
+		//var_dump($nextpod);
 		if ($extra_fields != null) {
 			//loop by fields requested
 			foreach ($extra_fields as $efield) {

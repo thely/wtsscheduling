@@ -191,7 +191,7 @@ class Reservation_Processor {
 
 			// Set events as reserved.
 			foreach($cal_events as $event) { 
-				$newEvent = $this->update_event($event);
+				$newEvent = $this->update_event($event, $student_email, $student_name);
 				$return_meta = $this->generate_email($newEvent, $event_ids);
 				return $return_meta;
 			}
