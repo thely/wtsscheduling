@@ -46,7 +46,7 @@ function pods_cf_capture_entry($config, $form){
 					$new_id = pods( $config['pod'] )->save( $key, $value, $user_id); 	
 				}
 				else if ($value == "" || $value == null) {
-					echo "not saving password??";
+					//echo "not saving password??";
 					continue;
 				}
 			}
@@ -152,7 +152,7 @@ function echo_debug($obj) {
 
 function pods_cf_preload_options($field) {
 	global $form;
-	
+
 	$processors = Caldera_Forms::get_processor_by_type('pods', $form);
 	if(empty($processors)){
 		return $field;
@@ -170,15 +170,24 @@ function pods_cf_preload_options($field) {
 		
 			if ($field['type'] == "checkbox") {
 				$chboxes = $loaded_user->field($field['slug']);
-				$ch_keys = array();
+				
+				if ($chboxes != false && $chboxes != null) {
+					$ch_keys = array();
 
-				foreach ($chboxes as $index => $value) {
-					array_push($ch_keys, $value['ID']);
-				}
-				foreach ($field['config']['option'] as $index => $option) {
-					//var_dump($option);
-					if (in_array($option['value'], $ch_keys)) {
-						$field['config']['option'][$index]['checked'] = "checked";
+					foreach ($chboxes as $index => $value) {
+						if (array_key_exists('id', $value)) {
+							array_push($ch_keys, $value['id']);
+						}
+						else if (array_key_exists('ID', $value)) {
+							array_push($ch_keys, $value['ID']);	
+						}
+					}
+
+					foreach ($field['config']['option'] as $index => $option) {
+						if (in_array($option['value'], $ch_keys)) {
+							//echo "<pre>SELECTED OPTION"; var_dump($option); echo "</pre>";
+							$field['config']['option'][$index]['checked'] = "checked";
+						}
 					}
 				}
 			}
