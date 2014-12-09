@@ -30,14 +30,15 @@ function pods_cf_capture_entry($config, $form){
 	}
 
 	if (!empty($config['editable'])) {
-		if ($config['pod'] == 'user') {
+		/*if ($config['pod'] == 'user') {
 			$user_id = get_current_user_id();
 			$params = array('where' => "id = '$user_id'");
 			$mypod = pods('user', $params);
-			while ($mypod->fetch()) {
-				$entry['calendar_id'] = $mypod->field('calendar_id');
-			}
-		}
+			//while ($mypod->fetch()) {
+			//	$entry['calendar_id'] = $mypod->field('calendar_id');
+				//$entry['calendars'] = $mypod->field('calendars');
+			//}
+		}*/
 
 		$user_id = get_current_user_id();
 		foreach ($entry as $key => $value) {
@@ -51,7 +52,7 @@ function pods_cf_capture_entry($config, $form){
 				}
 			}
 			else {
-				$new_id = pods( $config['pod'] )->save( $key, $value, $user_id); 
+				$new_id = pods( $config['pod'] )->save($key, $value, $user_id); 
 			}
 		}
 
